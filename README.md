@@ -1,4 +1,4 @@
-# fcp-find-ai-data-ingester
+# fcp-FIND-ai-data-ingester
 
 ## Prerequisites
 
