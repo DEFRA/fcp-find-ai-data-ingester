@@ -1,0 +1,36 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: fcp-find-ai-data-ingester
+  description: Scrapes gov.uk grant pages and stores them in Azure Blob Storage, ready for indexing in Azure AI Search
+  annotations:
+    github.com/project-slug: defra/fcp-find-ai-data-ingester
+    dev.azure.com/project: DEFRA-FFC
+    dev.azure.com/build-definition: fcp-find-ai-data-ingester
+    sonarqube.org/project-key: fcp-find-ai-data-ingester
+    grafana/dashboard-selector: "folderTitle == 'Managed Prometheus'"
+    backstage.io/kubernetes-id: fcp-find-ai-data-ingester
+  links:
+    - url: https://github.com/defra/fcp-find-ai-data-ingester
+      title: GitHub Repository
+      icon: github
+    - url: https://dev.azure.com/defragovuk/DEFRA-FFC/
+      title: Azure DevOps Project
+      icon: project
+    - url: https://sonarcloud.io/project/overview?id=fcp-find-ai-data-ingester
+      title: SonarCloud Analysis
+      icon: check
+    - url: https://snyk.io/test/github/DEFRA/fcp-find-ai-data-ingester
+      title: Snyk Analysis
+      icon: policy
+    - url: https://portal.azure.com/defradev.onmicrosoft.com
+      title: Azure Portal - Defra Dev
+      icon: cloud
+    - url: https://portal.azure.com/Defra.onmicrosoft.com
+      title: Azure Portal - Defra
+      icon: cloud
+spec:
+  type: backend
+  lifecycle: alpha
+  owner: "group:default/123-find"
+  system: system:default/fcp-find-system

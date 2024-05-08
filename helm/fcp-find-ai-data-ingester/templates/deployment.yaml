@@ -1,0 +1,8 @@
+{{- include "adp-helm-library.deployment" (list . "fcp-find-ai-data-ingester.deployment") -}}
+{{- define "fcp-find-ai-data-ingester.deployment" -}}
+spec:
+  template:
+    spec:
+      containers:
+      - {{ include "adp-helm-library.container" (list . "fcp-find-ai-data-ingester.container") }}
+{{- end -}}

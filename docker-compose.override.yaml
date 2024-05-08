@@ -1,0 +1,27 @@
+version: '3.8'
+# This override file should be used when running this service in isolation
+# to provide dependencies and expose ports for local testing
+
+services:
+  fcp-find-ai-data-ingester:
+    build:
+      target: development
+    image: fcp-find-ai-data-ingester-development
+    container_name: fcp-find-ai-data-ingester-development
+    ports:
+      - "3000:3000"
+      - "9229:9229"
+    volumes:
+      - ./app:/home/node/app
+      - ./test:/home/node/test
+      - ./scripts:/home/node/scripts
+      - ./package.json:/home/node/package.json
+
+  fcp-find-ai-data-ingester-postgres:
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

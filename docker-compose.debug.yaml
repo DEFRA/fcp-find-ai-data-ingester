@@ -1,0 +1,3 @@
+services:
+  fcp-find-ai-data-ingester:
+    command: npm run start:debug

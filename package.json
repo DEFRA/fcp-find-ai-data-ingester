@@ -1,0 +1,49 @@
+{
+  "name": "fcp-find-ai-data-ingester",
+  "version": "0.1.0",
+  "description": "",
+  "homepage": "github.com?owner=defra&repo=fcp-find-ai-data-ingester&organization=defra",
+  "main": "app/index.js",
+  "scripts": {
+    "pretest": "npm run test:lint",
+    "test": "jest --runInBand --forceExit",
+    "test:watch": "jest --coverage=false --onlyChanged --watch --runInBand",
+    "test:lint": "standard",
+    "test:debug": "node --inspect-brk=0.0.0.0 ./node_modules/jest/bin/jest.js --coverage=false --onlyChanged --watch --runInBand --no-cache",
+    "test:unit": "jest --testPathPattern=test/unit --runInBand",
+    "test:unit-watch": "jest --testPathPattern=test/unit --coverage=false --onlyChanged --watch",
+    "start:watch": "nodemon --inspect=0.0.0.0 --ext js --legacy-watch app/index.js",
+    "start:debug": "nodemon --inspect-brk=0.0.0.0 --ext js --legacy-watch app/index.js"
+  },
+  "author": "Defra",
+  "contributors": [],
+  "license": "OGL-UK-3.0",
+  "dependencies": {
+    "@hapi/hapi": "21.3.2",
+    "applicationinsights": "2.8.0"
+  },
+  "devDependencies": {
+    "jest": "29.7.0",
+    "jest-junit": "16.0.0",
+    "nodemon": "3.0.1",
+    "standard": "17.1.0",
+    "@types/jest": "29.5.11"
+  },
+  "standard": {
+    "globals": [
+      "describe",
+      "beforeEach",
+      "expect",
+      "test",
+      "afterEach",
+      "jest",
+      "beforeAll",
+      "afterAll"
+    ]
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "**/test-output/**"
+    ]
+  }
+}

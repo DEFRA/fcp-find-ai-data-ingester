@@ -1,0 +1,6 @@
+services:
+  fcp-find-ai-data-ingester:
+    command: >
+      sh -c "npm run test:watch"
+    volumes:
+      - ./.git:/home/node/.git

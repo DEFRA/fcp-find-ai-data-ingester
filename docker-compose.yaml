@@ -1,0 +1,19 @@
+services:
+  fcp-find-ai-data-ingester:
+    build:
+      context: .
+      target: production
+    image: fcp-find-ai-data-ingester
+    container_name: fcp-find-ai-data-ingester
+    depends_on:
+      - fcp-find-ai-data-ingester-postgres
+    environment:
+      APPINSIGHTS_CLOUDROLE: fcp-find-ai-data-ingester-local
+      APPINSIGHTS_CONNECTIONSTRING: ${APPINSIGHTS_CONNECTIONSTRING}
+
+  fcp-find-ai-data-ingester-postgres:
+    image: postgres:11.4-alpine
+    environment:
+      POSTGRES_DB: fcp-find-ai-data-ingester
+      POSTGRES_PASSWORD: ppp
+      POSTGRES_USERNAME: postgres

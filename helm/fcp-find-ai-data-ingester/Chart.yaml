@@ -1,0 +1,9 @@
+apiVersion: v2
+description: A Helm Chart to deploy the fcp-find-ai-data-ingester application to Kubernetes
+name: fcp-find-ai-data-ingester
+# this version is automatically updated in the build pipeline
+version: 1.0.0
+dependencies:
+- name: adp-helm-library
+  version: ^1.0.0
+  repository: https://raw.githubusercontent.com/defra/adp-helm-repository/main/adp-helm-library

@@ -1,0 +1,59 @@
+parameters:
+- name: deployFromFeature
+  displayName: "Deploy from Feature Branch"
+  type: boolean
+  default: false
+- name: deployConfigOnly
+  displayName: "Deploy App Config only"
+  type: boolean
+  default: false
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    exclude:
+      - test-output/*
+      - bin/*
+      - obj/*
+  drafts: false
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - "*"
+  paths:
+    exclude:
+      - test-output/*
+      - bin/*
+      - obj/*
+
+resources:
+  repositories:
+    - repository: DEFRA-ADPPipelineCommon
+      name: DEFRA/adp-pipeline-common
+      endpoint: DEFRA
+      type: github
+      ref: refs/heads/main
+
+extends:
+  template: /pipelines/common-app-build.yaml@DEFRA-ADPPipelineCommon
+  parameters:
+    projectName: "fcp-find-ai-data-ingester"
+    serviceName: "fcp-find-ai-data-ingester"
+    deployFromFeature: ${{ parameters.deployFromFeature }}
+    deployConfigOnly: ${{ parameters.deployConfigOnly }}
+    appBuildConfig:
+      appFrameworkType: "nodejs"
+      projectPath: "./package.json"
+      manifestPath: "./package.json"
+      imageRepoName: "fcp-find-ai-data-ingester"
+    appTestConfig:
+      testFilePath: "./docker-compose.test.yaml"
+    appDeployConfig:
+      filepath: "./appConfig"
+      filetype: "yaml"
+      variableGroups:
+        - fcp-find-ai-data-ingester-<environment>

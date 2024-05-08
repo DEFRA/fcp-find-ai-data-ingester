@@ -1,0 +1,6 @@
+- key: NODE_ENV
+  value: "production"
+- key: PORT
+  value: "3000"
+- key: APPINSIGHTS_CLOUDROLE
+  value: "{{serviceName}}"
