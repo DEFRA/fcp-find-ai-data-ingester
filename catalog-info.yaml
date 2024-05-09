@@ -32,5 +32,5 @@ metadata:
 spec:
   type: backend
   lifecycle: alpha
-  owner: "group:default/123-find"
+  owner: "group:default/fcp-find"
   system: system:default/fcp-find-system
