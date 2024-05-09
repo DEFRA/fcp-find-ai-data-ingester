@@ -1,6 +1,6 @@
 {
   "name": "fcp-find-ai-data-ingester",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "homepage": "github.com?owner=defra&repo=fcp-find-ai-data-ingester&organization=defra",
   "main": "app/index.js",
