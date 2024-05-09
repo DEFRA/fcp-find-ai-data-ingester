@@ -43,6 +43,7 @@ extends:
   parameters:
     projectName: "fcp-find-ai-data-ingester"
     serviceName: "fcp-find-ai-data-ingester"
+    teamName: "fcp-find"
     deployFromFeature: ${{ parameters.deployFromFeature }}
     deployConfigOnly: ${{ parameters.deployConfigOnly }}
     appBuildConfig:
