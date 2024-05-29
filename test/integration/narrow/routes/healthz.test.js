@@ -2,6 +2,9 @@ describe('Healthz test', () => {
   const server = require('../../../../app/server')
 
   beforeEach(async () => {
+    process.env.BLOB_STORAGE_CONNECTION_STRING = 'testConnectionString'
+    process.env.BLOB_STORAGE_CONTAINER = 'testContainerName'
+
     await server.start()
   })
 
