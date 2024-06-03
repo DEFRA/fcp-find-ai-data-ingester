@@ -36,12 +36,12 @@ resources:
       name: DEFRA/adp-pipeline-common
       endpoint: DEFRA
       type: github
-      ref: refs/heads/main
+      ref: pp/services-to-snd4
 
 extends:
   template: /pipelines/common-app-build.yaml@DEFRA-ADPPipelineCommon
   parameters:
-    projectName: "fcp-find-ai-data-ingester"
+    teamName: "fcp-find"
     serviceName: "fcp-find-ai-data-ingester"
     teamName: "fcp-find"
     deployFromFeature: ${{ parameters.deployFromFeature }}
