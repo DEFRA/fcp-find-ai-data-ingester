@@ -41,7 +41,6 @@ resources:
 extends:
   template: /pipelines/common-app-build.yaml@DEFRA-ADPPipelineCommon
   parameters:
-    teamName: "fcp-find"
     serviceName: "fcp-find-ai-data-ingester"
     teamName: "fcp-find"
     deployFromFeature: ${{ parameters.deployFromFeature }}
