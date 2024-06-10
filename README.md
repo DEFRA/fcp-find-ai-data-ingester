@@ -9,6 +9,26 @@ Optional:
 - Kubernetes
 - Helm
 
+## Local Development
+Install local dependencies
+```BASH
+npm i
+```
+
+Copy and populate .env file (api keys will need to be added in manually)
+```BASH
+cp .env.example .env
+```
+
+Spin up docker container
+```BASH
+docker-compose up 
+### or to launch in the background:
+docker-compose up -d
+```
+
+Run application on http://localhost:3000/
+
 ## Running the application
 
 The application is designed to run in containerised environments, using Docker Compose in development and Kubernetes in production.
