@@ -1,3 +1,9 @@
 - key: APPINSIGHTS_CONNECTIONSTRING
   value: "{{servicename}}-APPINSIGHTS-CONNECTIONSTRING"
   type: "keyvault"
+- key: BLOB_STORAGE_CONNECTION_STRING
+  value: "{{servicename}}-BLOB-STORAGE-CONNECTION-STRING"
+  type: "keyvault"
+- key: BLOB_STORAGE_CONTAINER
+  value: "{{servicename}}-BLOB-STORAGE-CONTAINER"
+  type: "keyvault"

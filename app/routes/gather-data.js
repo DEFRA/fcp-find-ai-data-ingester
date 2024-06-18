@@ -4,9 +4,10 @@ const { getFinderGrants, getNumberOfGrants } = require('../services/farming-find
 const { getVetVisits } = require('../services/vet-visits')
 const { getWoodlandGrants } = require('../services/woodland')
 const { processGrants } = require('../domain/processor')
+const { getWoodlandOfferGrants } = require('../services/woodland-offer')
 
 module.exports = {
-  method: 'GET',
+  method: 'POST',
   path: '/gather-data',
   handler: async (request, h) => {
     console.log(`Gather data started at ${new Date()}`)
@@ -26,6 +27,7 @@ module.exports = {
 
     const responseWoodland = await processWoodlandData(containerClient)
     const responseVetVisits = await processVetVisitsData(containerClient)
+    const responseWoodlandOffer = await processWoodlandOfferData(containerClient)
 
     console.log(`Finished running gather data at ${new Date()}`)
 
@@ -38,6 +40,9 @@ module.exports = {
       },
       vetVisits: {
         addedGrants: responseVetVisits.processedGrantsCount
+      },
+      woodlandOffer: {
+        addedGrants: responseWoodlandOffer.processedGrantsCount
       }
     }
 
@@ -74,6 +79,26 @@ const processWoodlandData = async (containerClient) => {
 
   const grantSchemeName = 'England Woodland Creation Partnerships grants'
   const { chunkCount, processedGrants } = await processGrants(grants, manifestData, grantSchemeName, containerClient)
+
+  manifestData.push(...processedGrants)
+
+  await uploadManifest(manifestData, manifestFilename, containerClient)
+
+  return {
+    chunkCount,
+    processedGrantsCount: processedGrants.length
+  }
+}
+
+const processWoodlandOfferData = async (containerClient) => {
+  const manifestFilename = config.woodlandOffer.manifestFile
+  const manifestGrants = await getManifest(manifestFilename)
+
+  const manifestData = [...manifestGrants]
+
+  const grants = await getWoodlandOfferGrants()
+
+  const { chunkCount, processedGrants } = await processGrants(grants, manifestData, 'England Woodland Creation Offer', containerClient)
 
   manifestData.push(...processedGrants)
 
