@@ -1,9 +1,10 @@
 const { ContainerClient } = require('@azure/storage-blob') // eslint-disable-line no-unused-vars
+const { SearchClient } = require('@azure/search-documents') // eslint-disable-line no-unused-vars
 const crypto = require('crypto')
 const { chunkDocument } = require('../utils/chunker')
 const { uploadDocument, deleteDocuments } = require('../services/azure-search-service')
-const { SearchClient } = require('@azure/search-documents') // eslint-disable-line no-unused-vars
 const { generateEmbedding } = require('../services/openai-service')
+const { getManifest, uploadManifest } = require('../services/blob-client')
 
 /**
  * @typedef {{link: string, lastModified: string, documentKeys: string[]}} Manifest
@@ -11,74 +12,84 @@ const { generateEmbedding } = require('../services/openai-service')
 
 /**
  * Chunks and uploads grants to AI Search & removes old grants from AI Search
- * @param {import('../services/govuk-api').Grant[]} grants
- * @param {Manifest[]} manifestGrants
- * @param {string} schemeName
- * @param {ContainerClient} containerClient
- * @param {SearchClient} searchClient
+ * @param {{ grants: import('../services/govuk-api').Grant[], scheme: { manifestFile: string, schemeName: string }, containerClient: ContainerClient, searchClient: SearchClient }} props
  * @returns {{number, processedGrants: Manifest[]}}
  */
-const process = async (grants, manifestGrants, schemeName, containerClient, searchClient) => {
-  const removedGrants = manifestGrants.filter((manifestGrant) => isGrantRemoved(manifestGrant, grants))
+const process = async ({ grants, scheme, containerClient, searchClient }) => {
+  const manifestGrants = await getManifest(scheme.manifestFile, containerClient)
 
+  const removedGrants = manifestGrants.filter((manifestGrant) => isGrantRemoved(manifestGrant, grants))
+  const removedGrantLinks = removedGrants.map((grant) => grant.link)
+  const manifestData = manifestGrants.filter((grant) => !removedGrantLinks.includes(grant.link))
   await processRemovedGrants(removedGrants, searchClient)
 
-  await processGrants(grants, manifestGrants, schemeName, containerClient, searchClient)
+  const result = await processGrants({
+    grants,
+    manifestGrants: manifestData,
+    schemeName: scheme.schemeName,
+    containerClient,
+    searchClient
+  })
+
+  manifestData.push(...result.processedGrants)
+  await uploadManifest(manifestData, scheme.manifestFile, containerClient)
+
+  return result
 }
 
 /**
  * Chunks and uploads grants to AI Search
- * @param {import('../services/govuk-api').Grant[]} grants
- * @param {Manifest[]} manifestGrants
- * @param {string} schemeName
- * @param {ContainerClient} containerClient
- * @param {SearchClient} searchClient
- * @returns {{number, processedGrants: Manifest[]}}
+ * @param {{ grants: import('../services/govuk-api').Grant[], manifestGrants: Manifest[], schemeName: string, containerClient: ContainerClient, searchClient: SearchClient }} props
+ * @returns {{ chunkCount: number, processedGrants: Manifest[] }}
  */
-const processGrants = async (grants, manifestGrants, schemeName, containerClient, searchClient) => {
+const processGrants = async ({ grants, manifestGrants, schemeName, containerClient, searchClient }) => {
   const processedGrants = []
 
   let chunkCount = 0
 
   for (const [index, grant] of grants.entries()) {
-    if (isGrantOutofDate(grant, manifestGrants)) {
-      const sourceURL = grant.url.replace('/api/content', '')
-      const grantHash = crypto.createHash('md5').update(grant.title).digest('hex')
-      const keys = []
-      console.log(`Processing grant ${index + 1}/${grants.length}... ${sourceURL}`)
+    try {
+      if (isGrantOutofDate(grant, manifestGrants)) {
+        const sourceURL = grant.url.replace('/api/content', '')
+        const grantHash = crypto.createHash('md5').update(grant.title).digest('hex')
+        const keys = []
+        console.log(`Processing grant ${index + 1}/${grants.length}... ${sourceURL}`)
 
-      const chunks = chunkDocument({
-        document: grant.content,
-        title: grant.title,
-        grantSchemeName: schemeName,
-        sourceUrl: grant.url
-      })
-
-      for (const [index, chunk] of chunks.entries()) {
-        console.log(`Processing chunk ${index + 1}/${chunks.length}...`)
-        const chunkHash = crypto.createHash('md5').update(chunk).digest('hex')
-        const embedding = await generateEmbedding(chunk)
-
-        const documentChunk = {
-          chunk_id: chunkHash,
-          parent_id: grantHash,
-          chunk,
+        const chunks = chunkDocument({
+          document: grant.content,
           title: grant.title,
-          grant_scheme_name: schemeName,
-          source_url: sourceURL,
-          content_vector: embedding
+          grantSchemeName: schemeName,
+          sourceUrl: grant.url
+        })
+
+        for (const [index, chunk] of chunks.entries()) {
+          console.log(`Processing chunk ${index + 1}/${chunks.length}...`)
+          const chunkHash = crypto.createHash('md5').update(chunk).digest('hex')
+          const embedding = await generateEmbedding(chunk)
+
+          const documentChunk = {
+            chunk_id: chunkHash,
+            parent_id: grantHash,
+            chunk,
+            title: grant.title,
+            grant_scheme_name: schemeName,
+            source_url: sourceURL,
+            content_vector: embedding
+          }
+
+          const processedKeys = await uploadDocument(documentChunk, searchClient)
+          keys.push(...processedKeys)
+          chunkCount++
         }
 
-        const processedKeys = await uploadDocument(documentChunk, searchClient)
-        keys.push(...processedKeys)
-        chunkCount++
+        processedGrants.push({
+          link: grant.url,
+          lastModified: grant.updateDate.toISOString(),
+          documentKeys: keys
+        })
       }
-
-      processedGrants.push({
-        link: grant.url,
-        lastModified: grant.updateDate.toISOString(),
-        documentKeys: keys
-      })
+    } catch (error) {
+      console.error('Error uploading grant', error)
     }
   }
 
@@ -134,6 +145,5 @@ const isGrantOutofDate = (grant, manifestGrants) => {
 }
 
 module.exports = {
-  processGrants,
   process
 }

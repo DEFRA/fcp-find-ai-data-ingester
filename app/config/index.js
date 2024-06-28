@@ -28,22 +28,26 @@ const schema = Joi.object({
   farmingFinder: Joi.object({
     searchUrl: Joi.string(),
     findFarmingUrl: Joi.string(),
-    manifestFile: Joi.string()
+    manifestFile: Joi.string(),
+    schemeName: Joi.string()
   }),
 
   vetVisits: Joi.object({
     url: Joi.string(),
-    manifestFile: Joi.string()
+    manifestFile: Joi.string(),
+    schemeName: Joi.string()
   }),
 
   woodlandCreation: Joi.object({
     url: Joi.string(),
-    manifestFile: Joi.string()
+    manifestFile: Joi.string(),
+    schemeName: Joi.string()
   }),
 
   woodlandOffer: Joi.object({
     url: Joi.string(),
-    manifestFile: Joi.string()
+    manifestFile: Joi.string(),
+    schemeName: Joi.string()
   })
 })
 
@@ -71,24 +75,28 @@ const config = {
   farmingFinder: {
     searchUrl: 'https://www.gov.uk/api/search.json?filter_format=farming_grant',
     findFarmingUrl: 'https://www.gov.uk/api/content',
-    manifestFile: 'manifest-farming-finder.json'
+    manifestFile: 'manifest-farming-finder.json',
+    schemeName: 'Sustainable Farming Incentive (SFI)'
   },
 
   vetVisits: {
     url: 'https://www.gov.uk/api/content/government/collections/funding-to-improve-animal-health-and-welfare-guidance-for-farmers-and-vets',
-    manifestFile: 'manifest-vet-visits.json'
+    manifestFile: 'manifest-vet-visits.json',
+    schemeName: 'Vet Visits'
   },
 
   // England Woodland Creation Partnerships grants and advice table
   woodlandCreation: {
     url: 'https://www.gov.uk/api/content/government/publications/england-woodland-creation-partnerships-grants-and-advice-table/england-woodland-creation-partnerships-grants-and-advice-table',
-    manifestFile: 'manifest-woodland-creation.json'
+    manifestFile: 'manifest-woodland-creation.json',
+    schemeName: 'England Woodland Creation Partnerships grants'
   },
 
   // England Woodland Creation Offer
   woodlandOffer: {
     url: 'https://www.gov.uk/api/content/guidance/england-woodland-creation-offer',
-    manifestFile: 'manifest-woodland-offer.json'
+    manifestFile: 'manifest-woodland-offer.json',
+    schemeName: 'England Woodland Creation Offer'
   }
 }
 

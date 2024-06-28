@@ -1,10 +1,11 @@
 const config = require('../config')
-const { getManifest, uploadManifest, getContainer } = require('../services/blob-client')
+const { getContainer } = require('../services/blob-client')
 const { getFinderGrants, getNumberOfGrants } = require('../services/farming-finder')
 const { getVetVisits } = require('../services/vet-visits')
 const { getWoodlandGrants } = require('../services/woodland')
 const { process } = require('../domain/processor')
 const { getWoodlandOfferGrants } = require('../services/woodland-offer')
+const { getSearchClient } = require('../services/azure-search-service')
 
 module.exports = {
   method: 'POST',
@@ -13,13 +14,14 @@ module.exports = {
     console.log(`Gather data started at ${new Date()}`)
 
     const containerClient = await getContainer()
+    const searchClient = await getSearchClient()
 
     const totalFarmingFinderGrants = await getNumberOfGrants()
-    const responseSfi = await processFarmingFinderData(containerClient, totalFarmingFinderGrants)
+    const responseSfi = await processFarmingFinderData({ containerClient, searchClient, count: totalFarmingFinderGrants })
 
-    const responseWoodland = await processWoodlandData(containerClient)
-    const responseVetVisits = await processVetVisitsData(containerClient)
-    const responseWoodlandOffer = await processWoodlandOfferData(containerClient)
+    const responseWoodland = await processWoodlandData({ containerClient, searchClient })
+    const responseVetVisits = await processVetVisitsData({ containerClient, searchClient })
+    const responseWoodlandOffer = await processWoodlandOfferData({ containerClient, searchClient })
 
     console.log(`Finished running gather data at ${new Date()}`)
 
@@ -42,103 +44,70 @@ module.exports = {
   }
 }
 
-const processVetVisitsData = async (containerClient) => {
-  try {
-    const manifestFilename = config.vetVisits.manifestFile
-    const manifestGrants = await getManifest(manifestFilename)
+const processVetVisitsData = async ({ containerClient, searchClient }) => {
+  const scheme = config.vetVisits
+  const grants = await getVetVisits()
 
-    const manifestData = [...manifestGrants]
+  const result = await processGrants({
+    grants,
+    scheme,
+    containerClient,
+    searchClient
+  })
 
-    const grants = await getVetVisits()
-
-    const { chunkCount, processedGrants } = await process(grants, manifestData, 'Vet Visits', containerClient)
-
-    manifestData.push(...processedGrants)
-
-    await uploadManifest(manifestData, manifestFilename, containerClient)
-
-    return {
-      chunkCount,
-      processedGrantsCount: processedGrants.length
-    }
-  } catch (error) {
-    console.error(error)
-
-    return {
-      processedGrantsCount: 0
-    }
-  }
+  return result
 }
 
-const processWoodlandData = async (containerClient) => {
-  try {
-    const manifestFilename = config.woodlandCreation.manifestFile
-    const manifestGrants = await getManifest(manifestFilename)
-    const manifestData = [...manifestGrants]
+const processWoodlandData = async ({ containerClient, searchClient }) => {
+  const scheme = config.woodlandCreation
+  const grants = await getWoodlandGrants()
 
-    const grants = await getWoodlandGrants()
+  const result = await processGrants({
+    grants,
+    scheme,
+    containerClient,
+    searchClient
+  })
 
-    const grantSchemeName = 'England Woodland Creation Partnerships grants'
-    const { chunkCount, processedGrants } = await process(grants, manifestData, grantSchemeName, containerClient)
-
-    manifestData.push(...processedGrants)
-
-    await uploadManifest(manifestData, manifestFilename, containerClient)
-
-    return {
-      chunkCount,
-      processedGrantsCount: processedGrants.length
-    }
-  } catch (error) {
-    console.error(error)
-
-    return {
-      processedGrantsCount: 0
-    }
-  }
+  return result
 }
 
-const processWoodlandOfferData = async (containerClient) => {
-  try {
-    const manifestFilename = config.woodlandOffer.manifestFile
-    const manifestGrants = await getManifest(manifestFilename)
+const processWoodlandOfferData = async ({ containerClient, searchClient }) => {
+  const scheme = config.woodlandOffer
+  const grants = await getWoodlandOfferGrants()
 
-    const manifestData = [...manifestGrants]
+  const result = await processGrants({
+    grants,
+    scheme,
+    containerClient,
+    searchClient
+  })
 
-    const grants = await getWoodlandOfferGrants()
-
-    const { chunkCount, processedGrants } = await process(grants, manifestData, 'England Woodland Creation Offer', containerClient)
-
-    manifestData.push(...processedGrants)
-
-    await uploadManifest(manifestData, manifestFilename, containerClient)
-
-    return {
-      chunkCount,
-      processedGrantsCount: processedGrants.length
-    }
-  } catch (error) {
-    console.error(error)
-
-    return {
-      processedGrantsCount: 0
-    }
-  }
+  return result
 }
 
-const processFarmingFinderData = async (containerClient, count) => {
+const processFarmingFinderData = async ({ containerClient, searchClient, count }) => {
+  const scheme = config.farmingFinder
+  const grants = await getFinderGrants(count)
+
+  const result = await processGrants({
+    grants,
+    scheme,
+    containerClient,
+    searchClient
+  })
+
+  return result
+}
+
+const processGrants = async ({ grants, scheme, containerClient, searchClient, count }) => {
   try {
-    const manifestFilename = config.farmingFinder.manifestFile
-    const manifestGrants = await getManifest(manifestFilename)
-    const manifestData = [...manifestGrants]
-
-    const grants = await getFinderGrants(count)
-
-    const { chunkCount, processedGrants } = await process(grants, manifestData, 'Sustainable Farming Incentive (SFI)', containerClient)
-
-    manifestData.push(...processedGrants)
-
-    await uploadManifest(manifestData, manifestFilename, containerClient)
+    const { chunkCount, processedGrants } = await process({
+      grants,
+      scheme,
+      containerClient,
+      searchClient
+    })
 
     return {
       chunkCount,

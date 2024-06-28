@@ -2,9 +2,10 @@ const { SearchClient, AzureKeyCredential } = require('@azure/search-documents')
 const config = require('../config')
 
 /**
- *
+ * Upload document to Azure AI Search
  * @param {{ chunk_id: string, parent_id: string, chunk: string, title: string, grant_scheme_name: string, source_url: string, content_vector: number[] }} document
- * @param {SearchClient} searchClient
+ * @param { SearchClient } searchClient
+ * @returns { string[] }
  */
 const uploadDocument = async (document, searchClient) => {
   const uploadResult = await searchClient.uploadDocuments([document])
@@ -18,7 +19,7 @@ const uploadDocument = async (document, searchClient) => {
     .map((result) => result.key)
 
   if (failedKeys.length > 0) {
-    console.log('failed keys: ', failedKeys)
+    console.error('failed keys: ', failedKeys)
   }
 
   return uploadedKeys

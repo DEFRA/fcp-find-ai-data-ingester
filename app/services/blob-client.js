@@ -32,10 +32,10 @@ async function uploadManifest (manifestData, manifestFilename, containerClient) 
 /**
  * Get a list of grant links processed in previous runs
  * @param {string} manifestFilename
+ * @param {ContainerClient} containerClient
  * @returns {Promise<import('../domain/processor').Manifest[]>}
  */
-async function getManifest (manifestFilename) {
-  const containerClient = await getContainerClient()
+async function getManifest (manifestFilename, containerClient) {
   const manifestClient = containerClient.getBlockBlobClient(manifestFilename)
 
   try {
@@ -46,7 +46,7 @@ async function getManifest (manifestFilename) {
     return manifestJSON
   } catch (error) {
     if (!error.statusCode || error.statusCode !== 404) {
-      console.log('Error fetching Manifest: ', error)
+      console.error('Error fetching Manifest: ', error)
     }
 
     return []

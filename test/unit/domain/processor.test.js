@@ -1,9 +1,12 @@
 const { process } = require('../../../app/domain/processor')
 const OpenAiService = require('../../../app/services/openai-service')
 const Chunker = require('../../../app/utils/chunker')
+const BlobClient = require('../../../app/services/blob-client')
 
+jest.mock('@azure/storage-blob')
 jest.mock('../../../app/services/openai-service')
 jest.mock('../../../app/utils/chunker')
+jest.mock('../../../app/services/blob-client')
 
 describe('processor', () => {
   let searchClientMock = jest.fn()
@@ -68,9 +71,21 @@ describe('processor', () => {
         ]
       })
 
-      await process(grants, manifestGrants, 'scheme name', {}, searchClientMock)
+      BlobClient.getManifest.mockResolvedValue(manifestGrants)
+
+      await process({
+        grants,
+        scheme: { manifestFile: 'testmanifest.json', schemeName: 'scheme name' },
+        containerClient: {},
+        searchClient: searchClientMock
+      })
 
       expect(searchClientMock.deleteDocuments).toHaveBeenCalledWith('chunk_id', ['keyFour', 'keyFive', 'keySix'])
+      expect(BlobClient.uploadManifest).toHaveBeenCalledWith(
+        [{ documentKeys: ['keyOne', 'keyTwo', 'keyThree'], lastModified: '2024-05-31T10:39:36.000Z', link: 'http://existinggrant.test' }],
+        'testmanifest.json',
+        {}
+      )
     })
 
     test('upload new grants', async () => {
@@ -113,13 +128,29 @@ describe('processor', () => {
       jest.spyOn(OpenAiService, 'generateEmbedding').mockResolvedValue([1.0, 1.0])
       jest.spyOn(Chunker, 'chunkDocument').mockReturnValue(['chunk1', 'chunk2'])
 
-      await process(grants, manifestGrants, 'scheme name', {}, searchClientMock)
+      BlobClient.getManifest.mockResolvedValue(manifestGrants)
+
+      await process({
+        grants,
+        manifestGrants,
+        scheme: { manifestFile: 'testmanifest.json', schemeName: 'scheme name' },
+        containerClient: {},
+        searchClient: searchClientMock
+      })
 
       expect(searchClientMock.uploadDocuments).toHaveBeenCalledWith([
         expect.objectContaining({
           chunk: 'chunk1'
         })
       ])
+      expect(BlobClient.uploadManifest).toHaveBeenCalledWith(
+        [
+          { documentKeys: ['keyOne', 'keyTwo', 'keyThree'], lastModified: '2024-05-31T10:39:36.000Z', link: 'http://existinggrant.test' },
+          { documentKeys: ['key', 'key'], lastModified: '2024-05-31T10:39:36.000Z', link: 'http://newgrant.test' }
+        ],
+        'testmanifest.json',
+        {}
+      )
     })
   })
 })
