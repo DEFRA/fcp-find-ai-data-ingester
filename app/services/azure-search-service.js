@@ -24,6 +24,19 @@ const uploadDocument = async (document, searchClient) => {
   return uploadedKeys
 }
 
+/**
+ * Delete documents from Azure AI Search
+ * @param {string[]} keys
+ * @param {SearchClient} searchClient
+ * @returns boolean
+ */
+const deleteDocuments = async (keys, searchClient) => {
+  const deletedRes = await searchClient.deleteDocuments(config.azureOpenAI.primaryKeyName, keys)
+  const unsuccessfulDeletes = deletedRes.results.filter((result) => !result.succeeded)
+
+  return unsuccessfulDeletes.length === 0
+}
+
 const getSearchClient = async () => {
   const searchClient = new SearchClient(
     config.azureOpenAI.searchUrl,
@@ -36,5 +49,6 @@ const getSearchClient = async () => {
 
 module.exports = {
   getSearchClient,
-  uploadDocument
+  uploadDocument,
+  deleteDocuments
 }

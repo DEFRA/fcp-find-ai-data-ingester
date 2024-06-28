@@ -14,6 +14,7 @@ const schema = Joi.object({
     searchUrl: Joi.string(),
     searchApiKey: Joi.string(),
     indexName: Joi.string(),
+    primaryKeyName: Joi.string(),
 
     openAiInstanceName: Joi.string(),
     openAiKey: Joi.string()
@@ -56,6 +57,7 @@ const config = {
     searchUrl: process.env.AZURE_AISEARCH_ENDPOINT,
     searchApiKey: process.env.AZURE_AISEARCH_KEY,
     indexName: process.env.AZURE_SEARCH_INDEX_NAME,
+    primaryKeyName: 'chunk_id',
 
     openAiInstanceName: process.env.AZURE_OPENAI_API_INSTANCE_NAME,
     openAiKey: process.env.AZURE_OPENAI_API_KEY

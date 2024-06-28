@@ -3,7 +3,7 @@ const { getManifest, uploadManifest, getContainer } = require('../services/blob-
 const { getFinderGrants, getNumberOfGrants } = require('../services/farming-finder')
 const { getVetVisits } = require('../services/vet-visits')
 const { getWoodlandGrants } = require('../services/woodland')
-const { processGrants } = require('../domain/processor')
+const { process } = require('../domain/processor')
 const { getWoodlandOfferGrants } = require('../services/woodland-offer')
 
 module.exports = {
@@ -51,7 +51,7 @@ const processVetVisitsData = async (containerClient) => {
 
     const grants = await getVetVisits()
 
-    const { chunkCount, processedGrants } = await processGrants(grants, manifestData, 'Vet Visits', containerClient)
+    const { chunkCount, processedGrants } = await process(grants, manifestData, 'Vet Visits', containerClient)
 
     manifestData.push(...processedGrants)
 
@@ -79,7 +79,7 @@ const processWoodlandData = async (containerClient) => {
     const grants = await getWoodlandGrants()
 
     const grantSchemeName = 'England Woodland Creation Partnerships grants'
-    const { chunkCount, processedGrants } = await processGrants(grants, manifestData, grantSchemeName, containerClient)
+    const { chunkCount, processedGrants } = await process(grants, manifestData, grantSchemeName, containerClient)
 
     manifestData.push(...processedGrants)
 
@@ -107,7 +107,7 @@ const processWoodlandOfferData = async (containerClient) => {
 
     const grants = await getWoodlandOfferGrants()
 
-    const { chunkCount, processedGrants } = await processGrants(grants, manifestData, 'England Woodland Creation Offer', containerClient)
+    const { chunkCount, processedGrants } = await process(grants, manifestData, 'England Woodland Creation Offer', containerClient)
 
     manifestData.push(...processedGrants)
 
@@ -134,7 +134,7 @@ const processFarmingFinderData = async (containerClient, count) => {
 
     const grants = await getFinderGrants(count)
 
-    const { chunkCount, processedGrants } = await processGrants(grants, manifestData, 'Sustainable Farming Incentive (SFI)', containerClient)
+    const { chunkCount, processedGrants } = await process(grants, manifestData, 'Sustainable Farming Incentive (SFI)', containerClient)
 
     manifestData.push(...processedGrants)
 

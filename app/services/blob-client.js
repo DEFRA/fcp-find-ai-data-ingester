@@ -9,7 +9,7 @@ async function getContainer () {
 
 /**
  * Upload manifest to azure blob storage
- * @param {{link: string, lastModified: string}[]} manifestData
+ * @param {import('../domain/processor').Manifest} manifestData
  * @param {string} manifestFilename
  * @param {ContainerClient} containerClient
  */
@@ -32,7 +32,7 @@ async function uploadManifest (manifestData, manifestFilename, containerClient) 
 /**
  * Get a list of grant links processed in previous runs
  * @param {string} manifestFilename
- * @returns {Promise<{link: string, lastModified: string}[]>}
+ * @returns {Promise<import('../domain/processor').Manifest[]>}
  */
 async function getManifest (manifestFilename) {
   const containerClient = await getContainerClient()

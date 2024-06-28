@@ -1,47 +1,47 @@
-const { OpenAIEmbeddings } = require('@langchain/openai')
 const { ContainerClient } = require('@azure/storage-blob') // eslint-disable-line no-unused-vars
 const crypto = require('crypto')
 const { chunkDocument } = require('../utils/chunker')
-const config = require('../config')
-const { uploadDocument, getSearchClient } = require('../services/azure-search-service')
-
-const onFailedAttempt = async (error) => {
-  if (error.retriesLeft === 0) {
-    throw new Error(`Failed to get embeddings: ${error}`)
-  }
-}
+const { uploadDocument, deleteDocuments } = require('../services/azure-search-service')
+const { SearchClient } = require('@azure/search-documents') // eslint-disable-line no-unused-vars
+const { generateEmbedding } = require('../services/openai-service')
 
 /**
  * @typedef {{link: string, lastModified: string, documentKeys: string[]}} Manifest
  */
 
 /**
- * Chunks and uploads grants to azure blob storage
- * @param {{title: string, content: string, updateDate: Date, url: string}[]} grants
+ * Chunks and uploads grants to AI Search & removes old grants from AI Search
+ * @param {import('../services/govuk-api').Grant[]} grants
  * @param {Manifest[]} manifestGrants
  * @param {string} schemeName
  * @param {ContainerClient} containerClient
+ * @param {SearchClient} searchClient
  * @returns {{number, processedGrants: Manifest[]}}
  */
-const processGrants = async (grants, manifestGrants, schemeName, containerClient) => {
+const process = async (grants, manifestGrants, schemeName, containerClient, searchClient) => {
+  const removedGrants = manifestGrants.filter((manifestGrant) => isGrantRemoved(manifestGrant, grants))
+
+  await processRemovedGrants(removedGrants, searchClient)
+
+  await processGrants(grants, manifestGrants, schemeName, containerClient, searchClient)
+}
+
+/**
+ * Chunks and uploads grants to AI Search
+ * @param {import('../services/govuk-api').Grant[]} grants
+ * @param {Manifest[]} manifestGrants
+ * @param {string} schemeName
+ * @param {ContainerClient} containerClient
+ * @param {SearchClient} searchClient
+ * @returns {{number, processedGrants: Manifest[]}}
+ */
+const processGrants = async (grants, manifestGrants, schemeName, containerClient, searchClient) => {
   const processedGrants = []
-  const embeddings = new OpenAIEmbeddings({
-    azureOpenAIApiInstanceName: config.azureOpenAI.openAiInstanceName,
-    azureOpenAIApiKey: config.azureOpenAI.openAiKey,
-    azureOpenAIApiDeploymentName: 'text-embedding-ada-002',
-    azureOpenAIApiVersion: '2024-02-01',
-    onFailedAttempt
-  })
+
   let chunkCount = 0
-  const azureSearchClient = await getSearchClient()
 
   for (const [index, grant] of grants.entries()) {
-    const lastModifiedString = manifestGrants.find((manifest) => manifest.link === grant.url)?.lastModified
-    const manifestDate = new Date(lastModifiedString)
-
-    // if the grant's last updated date is newer than manifest, add in the grant
-    // if this link is not present in the manifest, also add in the grant
-    if (!lastModifiedString || grant.updateDate > manifestDate) {
+    if (isGrantOutofDate(grant, manifestGrants)) {
       const sourceURL = grant.url.replace('/api/content', '')
       const grantHash = crypto.createHash('md5').update(grant.title).digest('hex')
       const keys = []
@@ -57,7 +57,7 @@ const processGrants = async (grants, manifestGrants, schemeName, containerClient
       for (const [index, chunk] of chunks.entries()) {
         console.log(`Processing chunk ${index + 1}/${chunks.length}...`)
         const chunkHash = crypto.createHash('md5').update(chunk).digest('hex')
-        const embedding = await embeddings.embedDocuments([chunk])
+        const embedding = await generateEmbedding(chunk)
 
         const documentChunk = {
           chunk_id: chunkHash,
@@ -66,10 +66,10 @@ const processGrants = async (grants, manifestGrants, schemeName, containerClient
           title: grant.title,
           grant_scheme_name: schemeName,
           source_url: sourceURL,
-          content_vector: embedding[0]
+          content_vector: embedding
         }
 
-        const processedKeys = await uploadDocument(documentChunk, azureSearchClient)
+        const processedKeys = await uploadDocument(documentChunk, searchClient)
         keys.push(...processedKeys)
         chunkCount++
       }
@@ -88,6 +88,52 @@ const processGrants = async (grants, manifestGrants, schemeName, containerClient
   }
 }
 
+/**
+ * Removes out of date grant documents from AI search
+ * @param {Manifest[]} removedGrants
+ * @param {SearchClient} searchClient
+ * @returns boolean
+ */
+const processRemovedGrants = async (removedGrants, searchClient) => {
+  if (removedGrants.length === 0) {
+    return true
+  }
+
+  const keys = removedGrants.flatMap((removedGrant) => removedGrant.documentKeys)
+
+  const result = await deleteDocuments(keys, searchClient)
+
+  return result
+}
+
+/**
+ * Returns true if grant s
+ * @param {Manifest} manifestGrant
+ * @param {import('../services/govuk-api').Grant[]} grants
+ * @returns boolean
+ */
+const isGrantRemoved = (manifestGrant, grants) => {
+  const matchedGrants = grants.filter((grant) => grant.url === manifestGrant.link)
+
+  return matchedGrants.length === 0
+}
+
+/**
+ * Returns true if a live grant's update date is newer than the manifest's update date
+ * @param {import('../services/govuk-api').Grant} grant
+ * @param {Manifest[]} manifestGrants
+ * @returns boolean
+ */
+const isGrantOutofDate = (grant, manifestGrants) => {
+  // if the grant's last updated date is newer than manifest, add in the grant
+  // if this link is not present in the manifest, also add in the grant
+  const lastModifiedString = manifestGrants.find((manifest) => manifest.link === grant.url)?.lastModified
+  const manifestDate = new Date(lastModifiedString)
+
+  return !lastModifiedString || grant.updateDate > manifestDate
+}
+
 module.exports = {
-  processGrants
+  processGrants,
+  process
 }
