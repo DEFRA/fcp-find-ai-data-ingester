@@ -7,48 +7,6 @@ async function getContainer () {
   return containerClient
 }
 
-function withTimeout (promise, ms) {
-  const timeoutPromise = new Promise((resolve, reject) => {
-    const timeoutId = setTimeout(() => {
-      reject(new Error(`Operation timed out after ${ms} ms`))
-    }, ms)
-
-    promise.finally(() => clearTimeout(timeoutId))
-  })
-
-  return Promise.race([promise, timeoutPromise])
-}
-
-/**
- * Upload a chunk to azure blob storage
- * @param {{ chunkContent: string, sourceURL: string, title: string, documentTitle: string, grantSchemeName, containerClient: ContainerClient, count: number }} chunkProp
- */
-async function uploadChunkToBlob ({ chunkContent, sourceURL, title, documentTitle, grantSchemeName, containerClient, count }) {
-  if (!chunkContent) {
-    return
-  }
-
-  console.log(`Attempting to upload chunk ${count} of length ${chunkContent.length}: ${documentTitle}`)
-  const blobClient = containerClient.getBlockBlobClient(documentTitle)
-
-  try {
-    await blobClient.upload(chunkContent, chunkContent.length, {
-      overwrite: true,
-      metadata: {
-        document_title: documentTitle,
-        source_url: sourceURL,
-        grant_scheme_name: grantSchemeName
-      }
-    })
-
-    console.log(`Blob uploaded successfully: ${documentTitle}`)
-  } catch (error) {
-    console.error('Error uploading blob:', error)
-
-    throw error
-  }
-}
-
 /**
  * Upload manifest to azure blob storage
  * @param {{link: string, lastModified: string}[]} manifestData
@@ -66,7 +24,7 @@ async function uploadManifest (manifestData, manifestFilename, containerClient) 
     })
     await blobClient.setMetadata({ dateUploaded: new Date().toISOString() })
 
-    console.log('Manifest Blob uploaded successfully')
+    console.log(`Manifest uploaded successfully: ${manifestFilename}`)
   } catch (error) {
     console.error('Error uploading manifest blob:', error)
   }
@@ -127,9 +85,7 @@ async function getContainerClient () {
 }
 
 module.exports = {
-  uploadChunkToBlob,
   uploadManifest,
   getManifest,
-  getContainer,
-  withTimeout
+  getContainer
 }

@@ -2,7 +2,13 @@ require('./insights').setup()
 const Hapi = require('@hapi/hapi')
 
 const server = Hapi.server({
-  port: process.env.PORT
+  port: process.env.PORT,
+  routes: {
+    timeout: {
+      server: 600000,
+      socket: false
+    }
+  }
 })
 
 const routes = [].concat(

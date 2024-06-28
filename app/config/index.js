@@ -10,6 +10,15 @@ const schema = Joi.object({
   appInsightsKey: Joi.string().optional(),
   logLevel: Joi.string().optional(),
 
+  azureOpenAI: Joi.object({
+    searchUrl: Joi.string(),
+    searchApiKey: Joi.string(),
+    indexName: Joi.string(),
+
+    openAiInstanceName: Joi.string(),
+    openAiKey: Joi.string()
+  }),
+
   blobStorage: Joi.object({
     connectionString: Joi.string(),
     containerName: Joi.string()
@@ -43,6 +52,15 @@ const config = {
   appInsightsKey: process.env.APPINSIGHTS_CONNECTIONSTRING,
   logLevel: process.env.LOG_LEVEL || 'error',
 
+  azureOpenAI: {
+    searchUrl: process.env.AZURE_AISEARCH_ENDPOINT,
+    searchApiKey: process.env.AZURE_AISEARCH_KEY,
+    indexName: process.env.AZURE_SEARCH_INDEX_NAME,
+
+    openAiInstanceName: process.env.AZURE_OPENAI_API_INSTANCE_NAME,
+    openAiKey: process.env.AZURE_OPENAI_API_KEY
+  },
+
   blobStorage: {
     connectionString: process.env.BLOB_STORAGE_CONNECTION_STRING || '',
     containerName: process.env.BLOB_STORAGE_CONTAINER || ''
@@ -55,7 +73,7 @@ const config = {
   },
 
   vetVisits: {
-    url: 'https://www.gov.uk/api/content/guidance/sfi-annual-health-and-welfare-review',
+    url: 'https://www.gov.uk/api/content/government/collections/funding-to-improve-animal-health-and-welfare-guidance-for-farmers-and-vets',
     manifestFile: 'manifest-vet-visits.json'
   },
 

@@ -15,15 +15,7 @@ module.exports = {
     const containerClient = await getContainer()
 
     const totalFarmingFinderGrants = await getNumberOfGrants()
-    let addedFarmingFinderGrants = 0
-    let count = 40
-    // This is used as Azure blob storage seems to rate limit us if we upload more than 70 documents (300 chunk uploads)
-    while (count <= totalFarmingFinderGrants + 40) {
-      const response = await processFarmingFinderData(containerClient, count)
-      count += 40
-      addedFarmingFinderGrants += response.processedGrantsCount
-      await sleep(5000)
-    }
+    const responseSfi = await processFarmingFinderData(containerClient, totalFarmingFinderGrants)
 
     const responseWoodland = await processWoodlandData(containerClient)
     const responseVetVisits = await processVetVisitsData(containerClient)
@@ -33,7 +25,7 @@ module.exports = {
 
     const results = {
       farmingFinder: {
-        addedGrants: addedFarmingFinderGrants
+        addedGrants: responseSfi.processedGrantsCount
       },
       woodlandCreationPartnership: {
         addedGrants: responseWoodland.processedGrantsCount
@@ -51,87 +43,112 @@ module.exports = {
 }
 
 const processVetVisitsData = async (containerClient) => {
-  const manifestFilename = config.vetVisits.manifestFile
-  const manifestGrants = await getManifest(manifestFilename)
+  try {
+    const manifestFilename = config.vetVisits.manifestFile
+    const manifestGrants = await getManifest(manifestFilename)
 
-  const manifestData = [...manifestGrants]
+    const manifestData = [...manifestGrants]
 
-  const grants = await getVetVisits()
+    const grants = await getVetVisits()
 
-  const { chunkCount, processedGrants } = await processGrants(grants, manifestData, 'Vet Visits', containerClient)
+    const { chunkCount, processedGrants } = await processGrants(grants, manifestData, 'Vet Visits', containerClient)
 
-  manifestData.push(...processedGrants)
+    manifestData.push(...processedGrants)
 
-  await uploadManifest(manifestData, manifestFilename, containerClient)
+    await uploadManifest(manifestData, manifestFilename, containerClient)
 
-  return {
-    chunkCount,
-    processedGrantsCount: processedGrants.length
+    return {
+      chunkCount,
+      processedGrantsCount: processedGrants.length
+    }
+  } catch (error) {
+    console.error(error)
+
+    return {
+      processedGrantsCount: 0
+    }
   }
 }
 
 const processWoodlandData = async (containerClient) => {
-  const manifestFilename = config.woodlandCreation.manifestFile
-  const manifestGrants = await getManifest(manifestFilename)
-  const manifestData = [...manifestGrants]
+  try {
+    const manifestFilename = config.woodlandCreation.manifestFile
+    const manifestGrants = await getManifest(manifestFilename)
+    const manifestData = [...manifestGrants]
 
-  const grants = await getWoodlandGrants()
+    const grants = await getWoodlandGrants()
 
-  const grantSchemeName = 'England Woodland Creation Partnerships grants'
-  const { chunkCount, processedGrants } = await processGrants(grants, manifestData, grantSchemeName, containerClient)
+    const grantSchemeName = 'England Woodland Creation Partnerships grants'
+    const { chunkCount, processedGrants } = await processGrants(grants, manifestData, grantSchemeName, containerClient)
 
-  manifestData.push(...processedGrants)
+    manifestData.push(...processedGrants)
 
-  await uploadManifest(manifestData, manifestFilename, containerClient)
+    await uploadManifest(manifestData, manifestFilename, containerClient)
 
-  return {
-    chunkCount,
-    processedGrantsCount: processedGrants.length
+    return {
+      chunkCount,
+      processedGrantsCount: processedGrants.length
+    }
+  } catch (error) {
+    console.error(error)
+
+    return {
+      processedGrantsCount: 0
+    }
   }
 }
 
 const processWoodlandOfferData = async (containerClient) => {
-  const manifestFilename = config.woodlandOffer.manifestFile
-  const manifestGrants = await getManifest(manifestFilename)
+  try {
+    const manifestFilename = config.woodlandOffer.manifestFile
+    const manifestGrants = await getManifest(manifestFilename)
 
-  const manifestData = [...manifestGrants]
+    const manifestData = [...manifestGrants]
 
-  const grants = await getWoodlandOfferGrants()
+    const grants = await getWoodlandOfferGrants()
 
-  const { chunkCount, processedGrants } = await processGrants(grants, manifestData, 'England Woodland Creation Offer', containerClient)
+    const { chunkCount, processedGrants } = await processGrants(grants, manifestData, 'England Woodland Creation Offer', containerClient)
 
-  manifestData.push(...processedGrants)
+    manifestData.push(...processedGrants)
 
-  await uploadManifest(manifestData, manifestFilename, containerClient)
+    await uploadManifest(manifestData, manifestFilename, containerClient)
 
-  return {
-    chunkCount,
-    processedGrantsCount: processedGrants.length
+    return {
+      chunkCount,
+      processedGrantsCount: processedGrants.length
+    }
+  } catch (error) {
+    console.error(error)
+
+    return {
+      processedGrantsCount: 0
+    }
   }
 }
 
 const processFarmingFinderData = async (containerClient, count) => {
-  const manifestFilename = config.farmingFinder.manifestFile
-  const manifestGrants = await getManifest(manifestFilename)
-  // TODO Test whether manifest data is duplicated when adding the processed grants
-  const manifestData = [...manifestGrants]
+  try {
+    const manifestFilename = config.farmingFinder.manifestFile
+    const manifestGrants = await getManifest(manifestFilename)
+    const manifestData = [...manifestGrants]
 
-  const grants = await getFinderGrants(count)
+    const grants = await getFinderGrants(count)
 
-  const { chunkCount, processedGrants } = await processGrants(grants, manifestData, 'Sustainable Farming Incentive (SFI)', containerClient)
+    const { chunkCount, processedGrants } = await processGrants(grants, manifestData, 'Sustainable Farming Incentive (SFI)', containerClient)
 
-  manifestData.push(...processedGrants)
+    manifestData.push(...processedGrants)
 
-  await uploadManifest(manifestData, manifestFilename, containerClient)
+    await uploadManifest(manifestData, manifestFilename, containerClient)
 
-  return {
-    chunkCount,
-    processedGrantsCount: processedGrants.length
+    return {
+      chunkCount,
+      processedGrantsCount: processedGrants.length
+    }
+  } catch (error) {
+    console.error(error)
+
+    return {
+      processedGrantsCount: 0
+    }
   }
-}
-
-function sleep (ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms)
-  })
 }

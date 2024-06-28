@@ -8,13 +8,17 @@ const { getGovukContent } = require('../services/govuk-api')
  * @returns {Promise<import('../services/govuk-api').Grant[]>}
  */
 async function getFinderGrants (count) {
-  const urls = await getLinksFromSearchAPI(count)
+  const urls = await getLinksFromSearchApi(count)
   const grants = []
 
   for (const url of urls) {
-    const grant = await getGovukContent(url)
+    try {
+      const grant = await getGovukContent(url)
 
-    grants.push(grant)
+      grants.push(grant)
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   return grants
@@ -25,12 +29,12 @@ async function getFinderGrants (count) {
  * @param {number} count
  * @returns {Promise<string[]>}
  */
-async function getLinksFromSearchAPI (count) {
+async function getLinksFromSearchApi (count) {
   const url = `${config.farmingFinder.searchUrl}&count=${count}`
   const response = await axios.get(url)
-  const searchAPIResponse = response.data
+  const searchApiResponse = response.data
 
-  const links = searchAPIResponse.results.map((result) => config.farmingFinder.findFarmingUrl + result.link)
+  const links = searchApiResponse.results.map((result) => config.farmingFinder.findFarmingUrl + result.link)
 
   return links
 }

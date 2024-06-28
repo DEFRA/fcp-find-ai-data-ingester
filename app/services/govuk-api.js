@@ -12,15 +12,19 @@ const { webpageToMarkdown, stripLinksFromMarkdown } = require('../utils/markdown
  */
 const getGovukContent = async (url) => {
   const response = await axios.get(url)
-  const responseJSON = response.data
+  const responseJson = response.data
 
-  let title = responseJSON.title
-  const updateDate = new Date(responseJSON.updated_at)
+  if (response.status !== 200 || !responseJson.title || !responseJson.details || !responseJson.details.body) {
+    throw new Error(`Unable to parse content from ${url}`)
+  }
+
+  let title = responseJson.title
+  const updateDate = new Date(responseJson.updated_at)
 
   title = title.replace('\\', '')
   title = title.replace('/', 'or')
 
-  const responseBody = responseJSON.details.body
+  const responseBody = responseJson.details.body
 
   const markdownContent = webpageToMarkdown(responseBody)
   const strippedContent = stripLinksFromMarkdown(markdownContent)
