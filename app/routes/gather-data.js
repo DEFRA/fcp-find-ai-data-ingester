@@ -6,12 +6,13 @@ const { getWoodlandGrants } = require('../services/woodland')
 const { process } = require('../domain/processor')
 const { getWoodlandOfferGrants } = require('../services/woodland-offer')
 const { getSearchClient } = require('../services/azure-search-service')
+const { logger } = require('../lib/logger')
 
 module.exports = {
   method: 'POST',
   path: '/gather-data',
   handler: async (request, h) => {
-    console.log(`Gather data started at ${new Date()}`)
+    logger.info(`Gather data started at ${new Date()}`)
 
     const containerClient = await getContainer()
     const searchClient = await getSearchClient()
@@ -23,7 +24,7 @@ module.exports = {
     const responseVetVisits = await processVetVisitsData({ containerClient, searchClient })
     const responseWoodlandOffer = await processWoodlandOfferData({ containerClient, searchClient })
 
-    console.log(`Finished running gather data at ${new Date()}`)
+    logger.info(`Finished running gather data at ${new Date()}`)
 
     const results = {
       farmingFinder: {
@@ -114,7 +115,7 @@ const processGrants = async ({ grants, scheme, containerClient, searchClient, co
       processedGrantsCount: processedGrants.length
     }
   } catch (error) {
-    console.error(error)
+    logger.error(error)
 
     return {
       processedGrantsCount: 0

@@ -5,6 +5,7 @@ const { chunkDocument } = require('../utils/chunker')
 const { uploadDocument, deleteDocuments } = require('../services/azure-search-service')
 const { generateEmbedding } = require('../services/openai-service')
 const { getManifest, uploadManifest } = require('../services/blob-client')
+const { logger } = require('../lib/logger')
 
 /**
  * @typedef {{link: string, lastModified: string, documentKeys: string[]}} Manifest
@@ -53,7 +54,7 @@ const processGrants = async ({ grants, manifestGrants, schemeName, containerClie
         const sourceURL = grant.url.replace('/api/content', '')
         const grantHash = crypto.createHash('md5').update(grant.title).digest('hex')
         const keys = []
-        console.log(`Processing grant ${index + 1}/${grants.length}... ${sourceURL}`)
+        logger.info(`Processing grant ${index + 1}/${grants.length}... ${sourceURL}`)
 
         const chunks = chunkDocument({
           document: grant.content,
@@ -63,7 +64,7 @@ const processGrants = async ({ grants, manifestGrants, schemeName, containerClie
         })
 
         for (const [index, chunk] of chunks.entries()) {
-          console.log(`Processing chunk ${index + 1}/${chunks.length}...`)
+          logger.debug(`Processing chunk ${index + 1}/${chunks.length}...`)
           const chunkHash = crypto.createHash('md5').update(chunk).digest('hex')
           const embedding = await generateEmbedding(chunk)
 
@@ -89,7 +90,7 @@ const processGrants = async ({ grants, manifestGrants, schemeName, containerClie
         })
       }
     } catch (error) {
-      console.error('Error uploading grant', error)
+      logger.error(error, 'Error uploading grant')
     }
   }
 

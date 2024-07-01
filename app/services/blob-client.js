@@ -1,5 +1,6 @@
 const { BlobServiceClient, ContainerClient } = require('@azure/storage-blob') // eslint-disable-line no-unused-vars
 const config = require('../config')
+const { logger } = require('../lib/logger')
 
 async function getContainer () {
   const containerClient = await getContainerClient()
@@ -24,9 +25,9 @@ async function uploadManifest (manifestData, manifestFilename, containerClient) 
     })
     await blobClient.setMetadata({ dateUploaded: new Date().toISOString() })
 
-    console.log(`Manifest uploaded successfully: ${manifestFilename}`)
+    logger.info(`Manifest uploaded successfully: ${manifestFilename}`)
   } catch (error) {
-    console.error('Error uploading manifest blob:', error)
+    logger.error(error, 'Error uploading manifest blob')
   }
 }
 /**
@@ -46,7 +47,7 @@ async function getManifest (manifestFilename, containerClient) {
     return manifestJSON
   } catch (error) {
     if (!error.statusCode || error.statusCode !== 404) {
-      console.error('Error fetching Manifest: ', error)
+      logger.error(error, 'Error fetching Manifest')
     }
 
     return []

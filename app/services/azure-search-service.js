@@ -1,5 +1,6 @@
 const { SearchClient, AzureKeyCredential } = require('@azure/search-documents')
 const config = require('../config')
+const { logger } = require('../lib/logger')
 
 /**
  * Upload document to Azure AI Search
@@ -19,7 +20,7 @@ const uploadDocument = async (document, searchClient) => {
     .map((result) => result.key)
 
   if (failedKeys.length > 0) {
-    console.error('failed keys: ', failedKeys)
+    logger.info('failed keys: ', failedKeys)
   }
 
   return uploadedKeys

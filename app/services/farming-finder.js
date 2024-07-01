@@ -1,5 +1,6 @@
 const axios = require('axios').default
 const config = require('../config')
+const { logger } = require('../lib/logger')
 const { getGovukContent } = require('../services/govuk-api')
 
 /**
@@ -17,7 +18,7 @@ async function getFinderGrants (count) {
 
       grants.push(grant)
     } catch (error) {
-      console.error(error)
+      logger.error(error)
     }
   }
 
