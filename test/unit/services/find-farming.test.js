@@ -22,7 +22,7 @@ describe('find-farming', () => {
       const linksResponse = getMockLinks()
       axios.get.mockResolvedValueOnce({ data: linksResponse })
 
-      axios.get.mockResolvedValue({ data: getMockGrant() })
+      axios.get.mockResolvedValue({ data: getMockGrant(), status: 200 })
 
       const response = await getFinderGrants(1)
 

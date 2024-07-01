@@ -1,5 +1,6 @@
 const { BlobServiceClient, ContainerClient } = require('@azure/storage-blob') // eslint-disable-line no-unused-vars
 const config = require('../config')
+const { logger } = require('../lib/logger')
 
 async function getContainer () {
   const containerClient = await getContainerClient()
@@ -7,51 +8,9 @@ async function getContainer () {
   return containerClient
 }
 
-function withTimeout (promise, ms) {
-  const timeoutPromise = new Promise((resolve, reject) => {
-    const timeoutId = setTimeout(() => {
-      reject(new Error(`Operation timed out after ${ms} ms`))
-    }, ms)
-
-    promise.finally(() => clearTimeout(timeoutId))
-  })
-
-  return Promise.race([promise, timeoutPromise])
-}
-
-/**
- * Upload a chunk to azure blob storage
- * @param {{ chunkContent: string, sourceURL: string, title: string, documentTitle: string, grantSchemeName, containerClient: ContainerClient, count: number }} chunkProp
- */
-async function uploadChunkToBlob ({ chunkContent, sourceURL, title, documentTitle, grantSchemeName, containerClient, count }) {
-  if (!chunkContent) {
-    return
-  }
-
-  console.log(`Attempting to upload chunk ${count} of length ${chunkContent.length}: ${documentTitle}`)
-  const blobClient = containerClient.getBlockBlobClient(documentTitle)
-
-  try {
-    await blobClient.upload(chunkContent, chunkContent.length, {
-      overwrite: true,
-      metadata: {
-        document_title: documentTitle,
-        source_url: sourceURL,
-        grant_scheme_name: grantSchemeName
-      }
-    })
-
-    console.log(`Blob uploaded successfully: ${documentTitle}`)
-  } catch (error) {
-    console.error('Error uploading blob:', error)
-
-    throw error
-  }
-}
-
 /**
  * Upload manifest to azure blob storage
- * @param {{link: string, lastModified: string}[]} manifestData
+ * @param {import('../domain/processor').Manifest} manifestData
  * @param {string} manifestFilename
  * @param {ContainerClient} containerClient
  */
@@ -66,18 +25,18 @@ async function uploadManifest (manifestData, manifestFilename, containerClient) 
     })
     await blobClient.setMetadata({ dateUploaded: new Date().toISOString() })
 
-    console.log('Manifest Blob uploaded successfully')
+    logger.info(`Manifest uploaded successfully: ${manifestFilename}`)
   } catch (error) {
-    console.error('Error uploading manifest blob:', error)
+    logger.error(error, 'Error uploading manifest blob')
   }
 }
 /**
  * Get a list of grant links processed in previous runs
  * @param {string} manifestFilename
- * @returns {Promise<{link: string, lastModified: string}[]>}
+ * @param {ContainerClient} containerClient
+ * @returns {Promise<import('../domain/processor').Manifest[]>}
  */
-async function getManifest (manifestFilename) {
-  const containerClient = await getContainerClient()
+async function getManifest (manifestFilename, containerClient) {
   const manifestClient = containerClient.getBlockBlobClient(manifestFilename)
 
   try {
@@ -88,7 +47,7 @@ async function getManifest (manifestFilename) {
     return manifestJSON
   } catch (error) {
     if (!error.statusCode || error.statusCode !== 404) {
-      console.log('Error fetching Manifest: ', error)
+      logger.error(error, 'Error fetching Manifest')
     }
 
     return []
@@ -127,9 +86,7 @@ async function getContainerClient () {
 }
 
 module.exports = {
-  uploadChunkToBlob,
   uploadManifest,
   getManifest,
-  getContainer,
-  withTimeout
+  getContainer
 }

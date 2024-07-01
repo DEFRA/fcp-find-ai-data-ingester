@@ -1,5 +1,10 @@
 const tiktoken = require('js-tiktoken')
 
+/**
+ * Chunk a long string into multipler smaller parts
+ * @param {{document: string, title: string, grantSchemeName: string, sourceUrl: string, tokenLimit: number}} chunkProps
+ * @returns string[]
+ */
 function chunkDocument ({ document, title, grantSchemeName, sourceUrl, tokenLimit = 512 }) {
   const encoding = tiktoken.encodingForModel('gpt-3.5-turbo-16k-0613')
   const chunks = []

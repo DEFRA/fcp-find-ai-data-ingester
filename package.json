@@ -1,6 +1,6 @@
 {
   "name": "fcp-find-ai-data-ingester",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "",
   "homepage": "github.com?owner=defra&repo=fcp-find-ai-data-ingester&organization=defra",
   "main": "app/index.js",
@@ -19,8 +19,10 @@
   "contributors": [],
   "license": "OGL-UK-3.0",
   "dependencies": {
+    "@azure/search-documents": "^12.0.0",
     "@azure/storage-blob": "^12.18.0",
     "@hapi/hapi": "21.3.2",
+    "@langchain/openai": "^0.2.1",
     "applicationinsights": "2.8.0",
     "axios": "^1.7.2",
     "cheerio": "^1.0.0-rc.12",
