@@ -7,7 +7,7 @@ if (process.env.NODE_ENV !== 'test') {
 const schema = Joi.object({
   env: Joi.string(),
 
-  // appInsightsKey: Joi.string().optional(),
+  appInsightsKey: Joi.string().optional(),
   logLevel: Joi.string().optional(),
 
   azureOpenAI: Joi.object({
@@ -107,7 +107,7 @@ const result = schema.validate(config, {
 })
 
 if (result.error) {
-  // throw new Error(`The server config is invalid. ${result.error.message}`)
+  throw new Error(`The server config is invalid. ${result.error.message}`)
 }
 
 module.exports = config

@@ -23,7 +23,7 @@ const process = async ({ grants, scheme, containerClient, searchClient, searchSu
   const removedGrantLinks = removedGrants.map((grant) => grant.link)
   const manifestData = manifestGrants.filter((grant) => !removedGrantLinks.includes(grant.link))
   await processRemovedGrants(removedGrants, searchClient)
-  await processRemovedGrants(removedGrants, searchSummariesClient)
+  // await processRemovedGrants(removedGrants, searchSummariesClient)
 
   const result = await processGrants({
     grants,
