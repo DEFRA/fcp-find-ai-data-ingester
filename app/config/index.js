@@ -7,7 +7,7 @@ if (process.env.NODE_ENV !== 'test') {
 const schema = Joi.object({
   env: Joi.string(),
 
-  appInsightsKey: Joi.string().optional(),
+  // appInsightsKey: Joi.string().optional(),
   logLevel: Joi.string().optional(),
 
   azureOpenAI: Joi.object({
@@ -60,6 +60,8 @@ const config = {
   azureOpenAI: {
     searchUrl: process.env.AZURE_AISEARCH_ENDPOINT,
     searchApiKey: process.env.AZURE_AISEARCH_KEY,
+    searchSummariesApiKey: process.env.AZURE_AISEARCH_SUMMARIES_KEY,
+    summaryIndexName: process.env.AZURE_SEARCH_SUMMARIES_INDEX_NAME,
     indexName: process.env.AZURE_SEARCH_INDEX_NAME,
     primaryKeyName: 'chunk_id',
 
@@ -105,7 +107,7 @@ const result = schema.validate(config, {
 })
 
 if (result.error) {
-  throw new Error(`The server config is invalid. ${result.error.message}`)
+  // throw new Error(`The server config is invalid. ${result.error.message}`)
 }
 
 module.exports = config

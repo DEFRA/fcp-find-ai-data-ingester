@@ -126,7 +126,10 @@ describe('processor', () => {
       })
 
       jest.spyOn(OpenAiService, 'generateEmbedding').mockResolvedValue([1.0, 1.0])
-      jest.spyOn(Chunker, 'chunkDocument').mockReturnValue(['chunk1', 'chunk2'])
+      jest.spyOn(Chunker, 'chunkDocument').mockReturnValue({
+        cunhks: ['chunk1', 'chunk2'],
+        shortSummary: 'short summary'
+      })
 
       BlobClient.getManifest.mockResolvedValue(manifestGrants)
 

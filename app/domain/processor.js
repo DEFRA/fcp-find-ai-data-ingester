@@ -16,20 +16,22 @@ const { logger } = require('../lib/logger')
  * @param {{ grants: import('../services/govuk-api').Grant[], scheme: { manifestFile: string, schemeName: string }, containerClient: ContainerClient, searchClient: SearchClient }} props
  * @returns {{number, processedGrants: Manifest[]}}
  */
-const process = async ({ grants, scheme, containerClient, searchClient }) => {
+const process = async ({ grants, scheme, containerClient, searchClient, searchSummariesClient }) => {
   const manifestGrants = await getManifest(scheme.manifestFile, containerClient)
 
   const removedGrants = manifestGrants.filter((manifestGrant) => isGrantRemoved(manifestGrant, grants))
   const removedGrantLinks = removedGrants.map((grant) => grant.link)
   const manifestData = manifestGrants.filter((grant) => !removedGrantLinks.includes(grant.link))
   await processRemovedGrants(removedGrants, searchClient)
+  await processRemovedGrants(removedGrants, searchSummariesClient)
 
   const result = await processGrants({
     grants,
     manifestGrants: manifestData,
     schemeName: scheme.schemeName,
     containerClient,
-    searchClient
+    searchClient,
+    searchSummariesClient
   })
 
   manifestData.push(...result.processedGrants)
@@ -43,9 +45,8 @@ const process = async ({ grants, scheme, containerClient, searchClient }) => {
  * @param {{ grants: import('../services/govuk-api').Grant[], manifestGrants: Manifest[], schemeName: string, containerClient: ContainerClient, searchClient: SearchClient }} props
  * @returns {{ chunkCount: number, processedGrants: Manifest[] }}
  */
-const processGrants = async ({ grants, manifestGrants, schemeName, containerClient, searchClient }) => {
+const processGrants = async ({ grants, manifestGrants, schemeName, containerClient, searchClient, searchSummariesClient }) => {
   const processedGrants = []
-
   let chunkCount = 0
 
   for (const [index, grant] of grants.entries()) {
@@ -56,7 +57,7 @@ const processGrants = async ({ grants, manifestGrants, schemeName, containerClie
         const keys = []
         logger.info(`Processing grant ${index + 1}/${grants.length}... ${sourceURL}`)
 
-        const chunks = chunkDocument({
+        const { chunks, shortSummary } = chunkDocument({
           document: grant.content,
           title: grant.title,
           grantSchemeName: schemeName,
@@ -83,10 +84,24 @@ const processGrants = async ({ grants, manifestGrants, schemeName, containerClie
           chunkCount++
         }
 
+        const embedding = await generateEmbedding(shortSummary)
+        const summaryChunk = {
+          chunk_id: grantHash,
+          parent_id: grantHash,
+          chunk: shortSummary,
+          title: grant.title,
+          grant_scheme_name: schemeName,
+          source_url: sourceURL,
+          content_vector: embedding
+        }
+        // Upload short summary
+        const uploadResult = await uploadDocument(summaryChunk, searchSummariesClient)
+
         processedGrants.push({
           link: grant.url,
           lastModified: grant.updateDate.toISOString(),
-          documentKeys: keys
+          documentKeys: keys,
+          summaryUploaded: uploadResult
         })
       }
     } catch (error) {

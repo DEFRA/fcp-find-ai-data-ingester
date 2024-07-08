@@ -22,7 +22,7 @@ describe('chunker', () => {
         sourceUrl: 'https://example.com'
       })
 
-      expect(chunkedDocument).toStrictEqual([
+      expect(chunkedDocument.chunks).toStrictEqual([
         expect.stringContaining('(Title: testTest | Grant Scheme Name: sfi | Source: https://example.com | Chunk Number: 1)===Lorem ipsum')
       ])
     })
@@ -35,7 +35,7 @@ describe('chunker', () => {
         sourceUrl: 'https://example.com'
       })
 
-      expect(chunkedDocument).toStrictEqual([
+      expect(chunkedDocument.chunks).toStrictEqual([
         expect.stringContaining('(Title: testTest | Grant Scheme Name: sfi | Source: https://example.com | Chunk Number: 1)===Lorem ipsum'),
         expect.stringContaining('(Title: testTest | Grant Scheme Name: sfi | Source: https://example.com | Chunk Number: 2)===Quisque volutpat neque')
       ])
