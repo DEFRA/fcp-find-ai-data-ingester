@@ -6,6 +6,7 @@ const { uploadDocument, deleteDocuments } = require('../services/azure-search-se
 const { generateEmbedding } = require('../services/openai-service')
 const { getManifest, uploadManifest } = require('../services/blob-client')
 const { logger } = require('../lib/logger')
+const { generateShortSummary } = require('../services/openai-service')
 
 /**
  * @typedef {{link: string, lastModified: string, documentKeys: string[]}} Manifest
@@ -13,7 +14,7 @@ const { logger } = require('../lib/logger')
 
 /**
  * Chunks and uploads grants to AI Search & removes old grants from AI Search
- * @param {{ grants: import('../services/govuk-api').Grant[], scheme: { manifestFile: string, schemeName: string }, containerClient: ContainerClient, searchClient: SearchClient }} props
+ * @param {{ grants: import('../services/govuk-api').Grant[], scheme: { manifestFile: string, schemeName: string }, containerClient: ContainerClient, searchClient: SearchClient, searchSummariesClient: SearchClient }} props
  * @returns {{number, processedGrants: Manifest[]}}
  */
 const process = async ({ grants, scheme, containerClient, searchClient, searchSummariesClient }) => {
@@ -45,7 +46,7 @@ const process = async ({ grants, scheme, containerClient, searchClient, searchSu
  * @param {{ grants: import('../services/govuk-api').Grant[], manifestGrants: Manifest[], schemeName: string, containerClient: ContainerClient, searchClient: SearchClient }} props
  * @returns {{ chunkCount: number, processedGrants: Manifest[] }}
  */
-const processGrants = async ({ grants, manifestGrants, schemeName, containerClient, searchClient, searchSummariesClient }) => {
+const processGrants = async ({ grants, manifestGrants, schemeName, containerClient, searchClient, searchSummariesClient, summaryTokenLimit = 60 }) => {
   const processedGrants = []
   let chunkCount = 0
 
@@ -57,12 +58,14 @@ const processGrants = async ({ grants, manifestGrants, schemeName, containerClie
         const keys = []
         logger.info(`Processing grant ${index + 1}/${grants.length}... ${sourceURL}`)
 
-        const { chunks, shortSummary } = chunkDocument({
+        const chunks = chunkDocument({
           document: grant.content,
           title: grant.title,
           grantSchemeName: schemeName,
           sourceUrl: grant.url
         })
+
+        const shortSummary = await generateShortSummary(grant.content, summaryTokenLimit)
 
         for (const [index, chunk] of chunks.entries()) {
           logger.debug(`Processing chunk ${index + 1}/${chunks.length}...`)
@@ -101,7 +104,7 @@ const processGrants = async ({ grants, manifestGrants, schemeName, containerClie
           link: grant.url,
           lastModified: grant.updateDate.toISOString(),
           documentKeys: keys,
-          summaryUploaded: uploadResult
+          summaryUploaded: uploadResult[0]
         })
       }
     } catch (error) {

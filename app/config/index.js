@@ -17,7 +17,11 @@ const schema = Joi.object({
     primaryKeyName: Joi.string(),
 
     openAiInstanceName: Joi.string(),
-    openAiKey: Joi.string()
+    openAiKey: Joi.string(),
+    openAiModelName: Joi.string(),
+
+    searchSummariesApiKey: Joi.string(),
+    summaryIndexName: Joi.string()
   }),
 
   blobStorage: Joi.object({
@@ -66,7 +70,8 @@ const config = {
     primaryKeyName: 'chunk_id',
 
     openAiInstanceName: process.env.AZURE_OPENAI_API_INSTANCE_NAME,
-    openAiKey: process.env.AZURE_OPENAI_API_KEY
+    openAiKey: process.env.AZURE_OPENAI_API_KEY,
+    openAiModelName: process.env.AZURE_OPENAI_MODEL_NAME
   },
 
   blobStorage: {

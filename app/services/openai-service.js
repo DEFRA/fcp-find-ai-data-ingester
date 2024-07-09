@@ -1,4 +1,5 @@
-const { OpenAIEmbeddings } = require('@langchain/openai')
+const { OpenAIEmbeddings, ChatOpenAI } = require('@langchain/openai')
+
 const config = require('../config')
 
 const onFailedAttempt = async (error) => {
@@ -26,6 +27,40 @@ const generateEmbedding = async (chunk) => {
   return embedding[0]
 }
 
+/**
+ * Generates a short summary for a given text
+ * @param {string} text - The text to summarize
+ * @param {number} summaryTokenLimit - The token limit for the summary
+ * @returns {string} - The generated summary
+ */
+const generateShortSummary = async (text, summaryTokenLimit = 60) => {
+  const model = new ChatOpenAI({
+    azureOpenAIApiInstanceName: config.azureOpenAI.openAiInstanceName,
+    azureOpenAIApiKey: config.azureOpenAI.openAiKey,
+    azureOpenAIApiDeploymentName: 'gpt-35-turbo-16k',
+    azureOpenAIApiVersion: '2024-02-01',
+    onFailedAttempt
+  })
+
+  const messages = [
+    ['user', `
+      Generate a short summary of the following text:
+      ${text}
+    `]
+  ]
+
+  try {
+    const response = await model.generate(messages)
+
+    // extract the summary from the response
+    return response.generations.flat()[0].text.replace(/\n/g, ' ').trim()
+  } catch (error) {
+    console.error('Error generating summary:', error)
+    return ''
+  }
+}
+
 module.exports = {
-  generateEmbedding
+  generateEmbedding,
+  generateShortSummary
 }

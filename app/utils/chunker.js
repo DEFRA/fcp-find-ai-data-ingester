@@ -1,27 +1,14 @@
 const tiktoken = require('js-tiktoken')
 
 /**
- * Chunk a long string into multiple smaller parts and generate a short description for the whole document
- * @param {{document: string, title: string, grantSchemeName: string, sourceUrl: string, tokenLimit: number, summaryTokenLimit: number}} chunkProps
- * @returns {{chunks: string[], shortSummary: string}} Array of chunks and short summary
+ * Chunk a long string into multipler smaller parts
+ * @param {{document: string, title: string, grantSchemeName: string, sourceUrl: string, tokenLimit: number}} chunkProps
+ * @returns string[]
  */
-function chunkDocument ({ document, title, grantSchemeName, sourceUrl, tokenLimit = 512, summaryTokenLimit = 60 }) {
+function chunkDocument ({ document, title, grantSchemeName, sourceUrl, tokenLimit = 512 }) {
   const encoding = tiktoken.encodingForModel('gpt-3.5-turbo-16k-0613')
   const chunks = []
   let tokens = encoding.encode(document, [], [])
-
-  // Generate short summary for the whole document
-  const summaryTokens = tokens.slice(0, summaryTokenLimit)
-  let shortSummary = encoding.decode(summaryTokens)
-  const lastSummarySentenceEnd = Math.max(
-    shortSummary.lastIndexOf('.'),
-    shortSummary.lastIndexOf('\n')
-  )
-  if (lastSummarySentenceEnd !== -1) {
-    shortSummary = shortSummary.slice(0, lastSummarySentenceEnd + 1)
-  }
-
-  shortSummary = shortSummary.replace(/\n/g, ' ').trim()
 
   let chunkNumber = 1
   const baseIdentifier = `(Title: ${title} | Grant Scheme Name: ${grantSchemeName} | Source: ${sourceUrl} | Chunk Number: `
@@ -55,10 +42,7 @@ function chunkDocument ({ document, title, grantSchemeName, sourceUrl, tokenLimi
     tokens = tokens.slice(overlapStart ? encoding.encode(chunkText.slice(0, overlapStart)).length : availableTokenLimit)
   }
 
-  return {
-    chunks,
-    shortSummary
-  }
+  return chunks
 }
 
 module.exports = {

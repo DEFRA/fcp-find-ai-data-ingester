@@ -126,10 +126,7 @@ describe('processor', () => {
       })
 
       jest.spyOn(OpenAiService, 'generateEmbedding').mockResolvedValue([1.0, 1.0])
-      jest.spyOn(Chunker, 'chunkDocument').mockReturnValue({
-        cunhks: ['chunk1', 'chunk2'],
-        shortSummary: 'short summary'
-      })
+      jest.spyOn(Chunker, 'chunkDocument').mockReturnValue(['chunk1', 'chunk2'])
 
       BlobClient.getManifest.mockResolvedValue(manifestGrants)
 
@@ -138,7 +135,8 @@ describe('processor', () => {
         manifestGrants,
         scheme: { manifestFile: 'testmanifest.json', schemeName: 'scheme name' },
         containerClient: {},
-        searchClient: searchClientMock
+        searchClient: searchClientMock,
+        searchSummariesClient: searchClientMock
       })
 
       expect(searchClientMock.uploadDocuments).toHaveBeenCalledWith([
@@ -149,7 +147,7 @@ describe('processor', () => {
       expect(BlobClient.uploadManifest).toHaveBeenCalledWith(
         [
           { documentKeys: ['keyOne', 'keyTwo', 'keyThree'], lastModified: '2024-05-31T10:39:36.000Z', link: 'http://existinggrant.test' },
-          { documentKeys: ['key', 'key'], lastModified: '2024-05-31T10:39:36.000Z', link: 'http://newgrant.test' }
+          { documentKeys: ['key', 'key'], lastModified: '2024-05-31T10:39:36.000Z', link: 'http://newgrant.test', summaryUploaded: 'key' }
         ],
         'testmanifest.json',
         {}
