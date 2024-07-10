@@ -2,6 +2,7 @@ const { process } = require('../../../app/domain/processor')
 const OpenAiService = require('../../../app/services/openai-service')
 const Chunker = require('../../../app/utils/chunker')
 const BlobClient = require('../../../app/services/blob-client')
+const { generateShortSummary } = require('../../../app/services/openai-service')
 
 jest.mock('@azure/storage-blob')
 jest.mock('../../../app/services/openai-service')
@@ -153,6 +154,13 @@ describe('processor', () => {
         'testmanifest.json',
         {}
       )
+
+      expect(OpenAiService.generateShortSummary).toHaveBeenCalledWith('newtest', 60)
+
+      const textToSummarize = 'This is a fake block of text that is being used to test the summarization service.'
+      OpenAiService.generateShortSummary.mockResolvedValue(textToSummarize)
+      const summary = await generateShortSummary('newtest', 60)
+      expect(summary.length).toBeGreaterThan(0)
     })
   })
 })

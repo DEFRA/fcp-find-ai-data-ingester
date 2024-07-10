@@ -52,7 +52,6 @@ const generateShortSummary = async (text, summaryTokenLimit = 60) => {
   try {
     const response = await model.generate(messages)
 
-    // extract the summary from the response
     return response.generations.flat()[0].text.replace(/\n/g, ' ').trim()
   } catch (error) {
     try {
