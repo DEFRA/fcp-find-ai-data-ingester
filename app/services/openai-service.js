@@ -55,8 +55,24 @@ const generateShortSummary = async (text, summaryTokenLimit = 60) => {
     // extract the summary from the response
     return response.generations.flat()[0].text.replace(/\n/g, ' ').trim()
   } catch (error) {
-    console.error('Error generating summary:', error)
-    return ''
+    try {
+      console.warn('Error generating summary using openai:', error)
+      if (typeof document !== 'string') {
+        console.error('Document is not a string', document)
+        return ''
+      }
+
+      const summary = document.split(' ').slice(0, summaryTokenLimit).join(' ')
+      const lastSentenceEnd = Math.max(
+        summary.lastIndexOf('.'),
+        summary.lastIndexOf('\n')
+      )
+
+      return summary.slice(0, lastSentenceEnd + 1)
+    } catch (error) {
+      console.error('Error generating summary using fallback:', error)
+      return ''
+    }
   }
 }
 

@@ -23,8 +23,7 @@ const process = async ({ grants, scheme, containerClient, searchClient, searchSu
   const removedGrants = manifestGrants.filter((manifestGrant) => isGrantRemoved(manifestGrant, grants))
   const removedGrantLinks = removedGrants.map((grant) => grant.link)
   const manifestData = manifestGrants.filter((grant) => !removedGrantLinks.includes(grant.link))
-  await processRemovedGrants(removedGrants, searchClient)
-  // await processRemovedGrants(removedGrants, searchSummariesClient)
+  await processRemovedGrants(removedGrants, searchClient, searchSummariesClient)
 
   const result = await processGrants({
     grants,
@@ -122,18 +121,21 @@ const processGrants = async ({ grants, manifestGrants, schemeName, containerClie
  * Removes out of date grant documents from AI search
  * @param {Manifest[]} removedGrants
  * @param {SearchClient} searchClient
+ * @param {SearchClient} searchSummariesClient
  * @returns boolean
  */
-const processRemovedGrants = async (removedGrants, searchClient) => {
+const processRemovedGrants = async (removedGrants, searchClient, searchSummariesClient) => {
   if (removedGrants.length === 0) {
     return true
   }
 
   const keys = removedGrants.flatMap((removedGrant) => removedGrant.documentKeys)
+  const summaryKeys = removedGrants.map((removedGrant) => removedGrant.summaryUploaded)
 
   const result = await deleteDocuments(keys, searchClient)
+  const summaryResult = await deleteDocuments(summaryKeys, searchSummariesClient)
 
-  return result
+  return result && summaryResult
 }
 
 /**

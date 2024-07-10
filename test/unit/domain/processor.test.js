@@ -77,7 +77,8 @@ describe('processor', () => {
         grants,
         scheme: { manifestFile: 'testmanifest.json', schemeName: 'scheme name' },
         containerClient: {},
-        searchClient: searchClientMock
+        searchClient: searchClientMock,
+        searchSummariesClient: searchClientMock
       })
 
       expect(searchClientMock.deleteDocuments).toHaveBeenCalledWith('chunk_id', ['keyFour', 'keyFive', 'keySix'])
