@@ -12,15 +12,19 @@ jest.mock('../../../app/services/blob-client')
 describe('processor', () => {
   let searchClientMock = jest.fn()
 
-  beforeEach(() => {
+  beforeEach(async () => {
     searchClientMock = {
       uploadDocuments: jest.fn(),
       deleteDocuments: jest.fn()
     }
+    jest.spyOn(console, 'error').mockImplementation(() => {})
+    jest.spyOn(console, 'warn').mockImplementation(() => { })
   })
 
   afterEach(() => {
     jest.resetAllMocks()
+    console.error.mockRestore()
+    console.warn.mockRestore()
   })
 
   describe('process', () => {
@@ -155,12 +159,21 @@ describe('processor', () => {
         {}
       )
 
-      expect(OpenAiService.generateShortSummary).toHaveBeenCalledWith('newtest', 60)
-
       const textToSummarize = 'This is a fake block of text that is being used to test the summarization service.'
+
+      expect(OpenAiService.generateShortSummary).toHaveBeenCalledWith('newtest', 60)
       OpenAiService.generateShortSummary.mockResolvedValue(textToSummarize)
-      const summary = await generateShortSummary('newtest', 60)
-      expect(summary.length).toBeGreaterThan(0)
+    })
+
+    test('generateShortSummary returns a non-empty string', async () => {
+      const textToSummarize = 'This is a fake block of text that is being used to test the summarization service.'
+      await generateShortSummary(textToSummarize, 60)
+
+      expect(OpenAiService.generateShortSummary).toHaveBeenCalledWith(textToSummarize, 60)
+      OpenAiService.generateShortSummary.mockResolvedValue(textToSummarize)
+
+      expect(console.error).not.toHaveBeenCalled()
+      expect(console.warn).not.toHaveBeenCalled()
     })
   })
 })

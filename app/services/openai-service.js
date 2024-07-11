@@ -51,6 +51,7 @@ const generateShortSummary = async (text, summaryTokenLimit = 60) => {
 
   try {
     const response = await model.generate(messages)
+    console.log('\n\n\n\n\n\n', { response }, '\n\n\n\n\n\n')
 
     return response.generations.flat()[0].text.replace(/\n/g, ' ').trim()
   } catch (error) {
