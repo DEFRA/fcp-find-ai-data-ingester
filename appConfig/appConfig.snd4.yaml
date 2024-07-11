@@ -10,9 +10,6 @@
 - key: AZURE_SEARCH_INDEX_NAME
   value: "{{servicename}}-AZURE-SEARCH-INDEX-NAME"
   type: "keyvault"
-- key: AZURE_AISEARCH_SUMMARIES_KEY
-  value: "{{servicename}}-AZURE-AISEARCH-SUMMARIES-KEY"
-  type: "keyvault"
 - key: AZURE_SEARCH_SUMMARIES_INDEX_NAME
   value: "{{servicename}}-AZURE-SEARCH-SUMMARIES-INDEX-NAME"
   type: "keyvault"
