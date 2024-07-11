@@ -12,7 +12,7 @@ jest.mock('../../../app/services/blob-client')
 describe('processor', () => {
   let searchClientMock = jest.fn()
 
-  beforeEach(async () => {
+  beforeEach(() => {
     searchClientMock = {
       uploadDocuments: jest.fn(),
       deleteDocuments: jest.fn()
