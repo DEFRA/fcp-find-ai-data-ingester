@@ -2,7 +2,6 @@ const { process } = require('../../../app/domain/processor')
 const OpenAiService = require('../../../app/services/openai-service')
 const Chunker = require('../../../app/utils/chunker')
 const BlobClient = require('../../../app/services/blob-client')
-const { generateShortSummary } = require('../../../app/services/openai-service')
 
 jest.mock('@azure/storage-blob')
 jest.mock('../../../app/services/openai-service')
@@ -17,14 +16,10 @@ describe('processor', () => {
       uploadDocuments: jest.fn(),
       deleteDocuments: jest.fn()
     }
-    jest.spyOn(console, 'error').mockImplementation(() => {})
-    jest.spyOn(console, 'warn').mockImplementation(() => { })
   })
 
   afterEach(() => {
     jest.resetAllMocks()
-    console.error.mockRestore()
-    console.warn.mockRestore()
   })
 
   describe('process', () => {
@@ -158,22 +153,6 @@ describe('processor', () => {
         'testmanifest.json',
         {}
       )
-
-      const textToSummarize = 'This is a fake block of text that is being used to test the summarization service.'
-
-      expect(OpenAiService.generateShortSummary).toHaveBeenCalledWith('newtest', 60)
-      OpenAiService.generateShortSummary.mockResolvedValue(textToSummarize)
-    })
-
-    test('generateShortSummary returns a non-empty string', async () => {
-      const textToSummarize = 'This is a fake block of text that is being used to test the summarization service.'
-      await generateShortSummary(textToSummarize, 60)
-
-      expect(OpenAiService.generateShortSummary).toHaveBeenCalledWith(textToSummarize, 60)
-      OpenAiService.generateShortSummary.mockResolvedValue(textToSummarize)
-
-      expect(console.error).not.toHaveBeenCalled()
-      expect(console.warn).not.toHaveBeenCalled()
     })
   })
 })

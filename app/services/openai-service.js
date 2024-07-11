@@ -1,4 +1,5 @@
 const { OpenAIEmbeddings, ChatOpenAI } = require('@langchain/openai')
+const { FakeChatModel } = require('@langchain/core/utils/testing')
 
 const config = require('../config')
 
@@ -33,14 +34,16 @@ const generateEmbedding = async (chunk) => {
  * @param {number} summaryTokenLimit - The token limit for the summary
  * @returns {string} - The generated summary
  */
-const generateShortSummary = async (text, summaryTokenLimit = 60) => {
-  const model = new ChatOpenAI({
-    azureOpenAIApiInstanceName: config.azureOpenAI.openAiInstanceName,
-    azureOpenAIApiKey: config.azureOpenAI.openAiKey,
-    azureOpenAIApiDeploymentName: 'gpt-35-turbo-16k',
-    azureOpenAIApiVersion: '2024-02-01',
-    onFailedAttempt
-  })
+const generateShortSummary = async (text, summaryTokenLimit = 60, useFakeModel) => {
+  const model = useFakeModel
+    ? new FakeChatModel({ onFailedAttempt })
+    : new ChatOpenAI({
+      azureOpenAIApiInstanceName: config.azureOpenAI.openAiInstanceName,
+      azureOpenAIApiKey: config.azureOpenAI.openAiKey,
+      azureOpenAIApiDeploymentName: 'gpt-35-turbo-16k',
+      azureOpenAIApiVersion: '2024-02-01',
+      onFailedAttempt
+    })
 
   const messages = [
     ['user', `
@@ -51,7 +54,6 @@ const generateShortSummary = async (text, summaryTokenLimit = 60) => {
 
   try {
     const response = await model.generate(messages)
-    console.log('\n\n\n\n\n\n', { response }, '\n\n\n\n\n\n')
 
     return response.generations.flat()[0].text.replace(/\n/g, ' ').trim()
   } catch (error) {
