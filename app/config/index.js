@@ -20,7 +20,6 @@ const schema = Joi.object({
     openAiKey: Joi.string(),
     openAiModelName: Joi.string(),
 
-    searchSummariesApiKey: Joi.string(),
     summaryIndexName: Joi.string()
   }),
 
@@ -64,7 +63,6 @@ const config = {
   azureOpenAI: {
     searchUrl: process.env.AZURE_AISEARCH_ENDPOINT,
     searchApiKey: process.env.AZURE_AISEARCH_KEY,
-    searchSummariesApiKey: process.env.AZURE_AISEARCH_SUMMARIES_KEY,
     summaryIndexName: process.env.AZURE_SEARCH_SUMMARIES_INDEX_NAME,
     indexName: process.env.AZURE_SEARCH_INDEX_NAME,
     primaryKeyName: 'chunk_id',
