@@ -47,7 +47,7 @@ const generateShortSummary = async (text, summaryTokenLimit = 60, useFakeModel) 
 
   const messages = [
     ['user', `
-      Generate a short summary of the following text:
+      Generate a summary of the following text without explaining that this is a summary. The result should be in the same tone and style as the original text. Limit the summary to ${summaryTokenLimit} tokens:
       ${text}
     `]
   ]
