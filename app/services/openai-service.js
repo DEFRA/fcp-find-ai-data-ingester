@@ -1,5 +1,6 @@
 const { OpenAIEmbeddings, ChatOpenAI } = require('@langchain/openai')
 const { FakeChatModel } = require('@langchain/core/utils/testing')
+const logger = require('../lib/logger')
 
 const config = require('../config')
 
@@ -58,9 +59,9 @@ const generateShortSummary = async (text, summaryTokenLimit = 100, useFakeModel)
     return response.generations.flat()[0].text.replace(/\n/g, ' ').trim()
   } catch (error) {
     try {
-      console.warn('Error generating summary using openai:', error)
+      logger.error('Error generating summary using openai:', error)
       if (typeof document !== 'string') {
-        console.error('Document is not a string', document)
+        logger.error('Document is not a string', document)
         return ''
       }
 
@@ -72,7 +73,7 @@ const generateShortSummary = async (text, summaryTokenLimit = 100, useFakeModel)
 
       return summary.slice(0, lastSentenceEnd + 1)
     } catch (error) {
-      console.error('Error generating summary using fallback:', error)
+      logger.error('Error generating summary using fallback:', error)
       return ''
     }
   }
