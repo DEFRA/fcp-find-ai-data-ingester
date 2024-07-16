@@ -148,7 +148,7 @@ describe('processor', () => {
       expect(BlobClient.uploadManifest).toHaveBeenCalledWith(
         [
           { documentKeys: ['keyOne', 'keyTwo', 'keyThree'], lastModified: '2024-05-31T10:39:36.000Z', link: 'http://existinggrant.test' },
-          { documentKeys: ['key', 'key'], lastModified: '2024-05-31T10:39:36.000Z', link: 'http://newgrant.test', summaryUploaded: 'key' }
+          { documentKeys: ['key', 'key'], lastModified: '2024-05-31T10:39:36.000Z', link: 'http://newgrant.test', summariesKeys: ['key', 'key'] }
         ],
         'testmanifest.json',
         {}

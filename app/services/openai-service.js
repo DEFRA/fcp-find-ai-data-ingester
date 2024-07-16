@@ -34,7 +34,7 @@ const generateEmbedding = async (chunk) => {
  * @param {number} summaryTokenLimit - The token limit for the summary
  * @returns {string} - The generated summary
  */
-const generateShortSummary = async (text, summaryTokenLimit = 60, useFakeModel) => {
+const generateShortSummary = async (text, summaryTokenLimit = 100, useFakeModel) => {
   const model = useFakeModel
     ? new FakeChatModel({ onFailedAttempt })
     : new ChatOpenAI({

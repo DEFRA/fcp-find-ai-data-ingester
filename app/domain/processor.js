@@ -45,7 +45,7 @@ const process = async ({ grants, scheme, containerClient, searchClient, searchSu
  * @param {{ grants: import('../services/govuk-api').Grant[], manifestGrants: Manifest[], schemeName: string, containerClient: ContainerClient, searchClient: SearchClient }} props
  * @returns {{ chunkCount: number, processedGrants: Manifest[] }}
  */
-const processGrants = async ({ grants, manifestGrants, schemeName, containerClient, searchClient, searchSummariesClient, summaryTokenLimit = 60 }) => {
+const processGrants = async ({ grants, manifestGrants, schemeName, containerClient, searchClient, searchSummariesClient, summaryTokenLimit = 100 }) => {
   const processedGrants = []
   let chunkCount = 0
 
@@ -63,8 +63,6 @@ const processGrants = async ({ grants, manifestGrants, schemeName, containerClie
           grantSchemeName: schemeName,
           sourceUrl: grant.url
         })
-
-        const shortSummary = await generateShortSummary(grant.content, summaryTokenLimit)
 
         for (const [index, chunk] of chunks.entries()) {
           logger.debug(`Processing chunk ${index + 1}/${chunks.length}...`)
@@ -86,24 +84,42 @@ const processGrants = async ({ grants, manifestGrants, schemeName, containerClie
           chunkCount++
         }
 
-        const embedding = await generateEmbedding(shortSummary)
-        const summaryChunk = {
-          chunk_id: grantHash,
-          parent_id: grantHash,
-          chunk: shortSummary,
+        const shortSummary = await generateShortSummary(grant.content, summaryTokenLimit)
+
+        const summariesChunks = chunkDocument({
+          document: shortSummary,
           title: grant.title,
-          grant_scheme_name: schemeName,
-          source_url: sourceURL,
-          content_vector: embedding
+          grantSchemeName: schemeName,
+          sourceUrl: grant.url
+        })
+
+        const summariesKeys = []
+        // given the summary is short, there should only be one chunk
+        for (const [index, chunk] of summariesChunks) {
+          logger.debug(`Processing summary chunk ${index + 1}/${summariesChunks.length}...`)
+          const chunkHash = crypto.createHash('md5').update(chunk).digest('hex')
+          const embedding = await generateEmbedding(chunk)
+
+          const summaryChunk = {
+            chunk_id: chunkHash,
+            parent_id: grantHash,
+            chunk,
+            title: grant.title,
+            grant_scheme_name: schemeName,
+            source_url: sourceURL,
+            content_vector: embedding
+          }
+
+          // Upload short summary
+          const processedKeys = await uploadDocument(summaryChunk, searchSummariesClient)
+          summariesKeys.push(...processedKeys)
         }
-        // Upload short summary
-        const uploadResult = await uploadDocument(summaryChunk, searchSummariesClient)
 
         processedGrants.push({
           link: grant.url,
           lastModified: grant.updateDate.toISOString(),
           documentKeys: keys,
-          summaryUploaded: uploadResult[0]
+          summariesKeys
         })
       }
     } catch (error) {
@@ -130,7 +146,7 @@ const processRemovedGrants = async (removedGrants, searchClient, searchSummaries
   }
 
   const keys = removedGrants.flatMap((removedGrant) => removedGrant.documentKeys)
-  const summaryKeys = removedGrants.map((removedGrant) => removedGrant.summaryUploaded)
+  const summaryKeys = removedGrants.map((removedGrant) => removedGrant.summariesKeys)
 
   const result = await deleteDocuments(keys, searchClient)
   const summaryResult = await deleteDocuments(summaryKeys, searchSummariesClient)
