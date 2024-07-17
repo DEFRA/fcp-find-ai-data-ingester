@@ -6,6 +6,7 @@ const { uploadDocument, deleteDocuments } = require('../services/azure-search-se
 const { generateEmbedding } = require('../services/openai-service')
 const { getManifest, uploadManifest } = require('../services/blob-client')
 const { logger } = require('../lib/logger')
+const { generateShortSummary } = require('../services/openai-service')
 
 /**
  * @typedef {{link: string, lastModified: string, documentKeys: string[]}} Manifest
@@ -13,23 +14,24 @@ const { logger } = require('../lib/logger')
 
 /**
  * Chunks and uploads grants to AI Search & removes old grants from AI Search
- * @param {{ grants: import('../services/govuk-api').Grant[], scheme: { manifestFile: string, schemeName: string }, containerClient: ContainerClient, searchClient: SearchClient }} props
+ * @param {{ grants: import('../services/govuk-api').Grant[], scheme: { manifestFile: string, schemeName: string }, containerClient: ContainerClient, searchClient: SearchClient, searchSummariesClient: SearchClient }} props
  * @returns {{number, processedGrants: Manifest[]}}
  */
-const process = async ({ grants, scheme, containerClient, searchClient }) => {
+const process = async ({ grants, scheme, containerClient, searchClient, searchSummariesClient }) => {
   const manifestGrants = await getManifest(scheme.manifestFile, containerClient)
 
   const removedGrants = manifestGrants.filter((manifestGrant) => isGrantRemoved(manifestGrant, grants))
   const removedGrantLinks = removedGrants.map((grant) => grant.link)
   const manifestData = manifestGrants.filter((grant) => !removedGrantLinks.includes(grant.link))
-  await processRemovedGrants(removedGrants, searchClient)
+  await processRemovedGrants(removedGrants, searchClient, searchSummariesClient)
 
   const result = await processGrants({
     grants,
     manifestGrants: manifestData,
     schemeName: scheme.schemeName,
     containerClient,
-    searchClient
+    searchClient,
+    searchSummariesClient
   })
 
   manifestData.push(...result.processedGrants)
@@ -43,9 +45,8 @@ const process = async ({ grants, scheme, containerClient, searchClient }) => {
  * @param {{ grants: import('../services/govuk-api').Grant[], manifestGrants: Manifest[], schemeName: string, containerClient: ContainerClient, searchClient: SearchClient }} props
  * @returns {{ chunkCount: number, processedGrants: Manifest[] }}
  */
-const processGrants = async ({ grants, manifestGrants, schemeName, containerClient, searchClient }) => {
+const processGrants = async ({ grants, manifestGrants, schemeName, containerClient, searchClient, searchSummariesClient, summaryTokenLimit = 100 }) => {
   const processedGrants = []
-
   let chunkCount = 0
 
   for (const [index, grant] of grants.entries()) {
@@ -83,10 +84,42 @@ const processGrants = async ({ grants, manifestGrants, schemeName, containerClie
           chunkCount++
         }
 
+        const shortSummary = await generateShortSummary(grant.content, summaryTokenLimit)
+
+        const summariesChunks = chunkDocument({
+          document: shortSummary,
+          title: grant.title,
+          grantSchemeName: schemeName,
+          sourceUrl: grant.url
+        })
+
+        const summariesKeys = []
+        // given the summary is short, there should only be one chunk
+        for (const [index, chunk] of summariesChunks) {
+          logger.debug(`Processing summary chunk ${index + 1}/${summariesChunks.length}...`)
+          const chunkHash = crypto.createHash('md5').update(chunk).digest('hex')
+          const embedding = await generateEmbedding(chunk)
+
+          const summaryChunk = {
+            chunk_id: chunkHash,
+            parent_id: grantHash,
+            chunk,
+            title: grant.title,
+            grant_scheme_name: schemeName,
+            source_url: sourceURL,
+            content_vector: embedding
+          }
+
+          // Upload short summary
+          const processedKeys = await uploadDocument(summaryChunk, searchSummariesClient)
+          summariesKeys.push(...processedKeys)
+        }
+
         processedGrants.push({
           link: grant.url,
           lastModified: grant.updateDate.toISOString(),
-          documentKeys: keys
+          documentKeys: keys,
+          summariesKeys
         })
       }
     } catch (error) {
@@ -104,18 +137,21 @@ const processGrants = async ({ grants, manifestGrants, schemeName, containerClie
  * Removes out of date grant documents from AI search
  * @param {Manifest[]} removedGrants
  * @param {SearchClient} searchClient
+ * @param {SearchClient} searchSummariesClient
  * @returns boolean
  */
-const processRemovedGrants = async (removedGrants, searchClient) => {
+const processRemovedGrants = async (removedGrants, searchClient, searchSummariesClient) => {
   if (removedGrants.length === 0) {
     return true
   }
 
   const keys = removedGrants.flatMap((removedGrant) => removedGrant.documentKeys)
+  const summaryKeys = removedGrants.map((removedGrant) => removedGrant.summariesKeys)
 
   const result = await deleteDocuments(keys, searchClient)
+  const summaryResult = await deleteDocuments(summaryKeys, searchSummariesClient)
 
-  return result
+  return result && summaryResult
 }
 
 /**

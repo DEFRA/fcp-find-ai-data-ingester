@@ -77,7 +77,8 @@ describe('processor', () => {
         grants,
         scheme: { manifestFile: 'testmanifest.json', schemeName: 'scheme name' },
         containerClient: {},
-        searchClient: searchClientMock
+        searchClient: searchClientMock,
+        searchSummariesClient: searchClientMock
       })
 
       expect(searchClientMock.deleteDocuments).toHaveBeenCalledWith('chunk_id', ['keyFour', 'keyFive', 'keySix'])
@@ -135,7 +136,8 @@ describe('processor', () => {
         manifestGrants,
         scheme: { manifestFile: 'testmanifest.json', schemeName: 'scheme name' },
         containerClient: {},
-        searchClient: searchClientMock
+        searchClient: searchClientMock,
+        searchSummariesClient: searchClientMock
       })
 
       expect(searchClientMock.uploadDocuments).toHaveBeenCalledWith([
@@ -146,7 +148,7 @@ describe('processor', () => {
       expect(BlobClient.uploadManifest).toHaveBeenCalledWith(
         [
           { documentKeys: ['keyOne', 'keyTwo', 'keyThree'], lastModified: '2024-05-31T10:39:36.000Z', link: 'http://existinggrant.test' },
-          { documentKeys: ['key', 'key'], lastModified: '2024-05-31T10:39:36.000Z', link: 'http://newgrant.test' }
+          { documentKeys: ['key', 'key'], lastModified: '2024-05-31T10:39:36.000Z', link: 'http://newgrant.test', summariesKeys: ['key', 'key'] }
         ],
         'testmanifest.json',
         {}

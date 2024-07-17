@@ -10,6 +10,9 @@
 - key: AZURE_SEARCH_INDEX_NAME
   value: "{{servicename}}-AZURE-SEARCH-INDEX-NAME"
   type: "keyvault"
+- key: AZURE_SEARCH_SUMMARIES_INDEX_NAME
+  value: "{{servicename}}-AZURE-SEARCH-SUMMARIES-INDEX-NAME"
+  type: "keyvault"
 - key: AZURE_OPENAI_API_INSTANCE_NAME
   value: "{{servicename}}-AZURE-OPENAI-API-INSTANCE-NAME"
   type: "keyvault"

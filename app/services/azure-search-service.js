@@ -49,8 +49,19 @@ const getSearchClient = async () => {
   return searchClient
 }
 
+const getSearchSummariesClient = async () => {
+  const searchClient = new SearchClient(
+    config.azureOpenAI.searchUrl,
+    config.azureOpenAI.summaryIndexName,
+    new AzureKeyCredential(config.azureOpenAI.searchApiKey)
+  )
+
+  return searchClient
+}
+
 module.exports = {
   getSearchClient,
+  getSearchSummariesClient,
   uploadDocument,
   deleteDocuments
 }
