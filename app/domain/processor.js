@@ -95,7 +95,7 @@ const processGrants = async ({ grants, manifestGrants, schemeName, containerClie
 
         const summariesKeys = []
         // given the summary is short, there should only be one chunk
-        for (const [index, chunk] of summariesChunks) {
+        for (const [index, chunk] of summariesChunks.entries()) {
           logger.debug(`Processing summary chunk ${index + 1}/${summariesChunks.length}...`)
           const chunkHash = crypto.createHash('md5').update(chunk).digest('hex')
           const embedding = await generateEmbedding(chunk)
