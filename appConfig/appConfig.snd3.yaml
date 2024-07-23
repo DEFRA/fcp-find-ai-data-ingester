@@ -19,6 +19,9 @@
 - key: AZURE_OPENAI_API_KEY
   value: "{{servicename}}-AZURE-OPENAI-API-KEY"
   type: "keyvault"
+- key: AZURE_OPENAI_MODEL_NAME
+  value: "{{servicename}}-AZURE-OPENAI-API-MODEL-NAME"
+  type: "keyvault"
 - key: BLOB_STORAGE_CONNECTION_STRING
   value: "{{servicename}}-BLOB-STORAGE-CONNECTION-STRING"
   type: "keyvault"

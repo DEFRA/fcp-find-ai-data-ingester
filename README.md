@@ -1,15 +1,26 @@
 # fcp-find-ai-data-ingester
 
+The data ingester scrapes and stores govuk grant content. The grants are chunked into documents and stored in two indexes within Azure AI Search.
+
+- find-ai-vector-filterable-index-full - Contains the full documents of each grant
+- find-ai-vector-filterable-index-summaries - Stores a short summary of each grant
+
+A manifest file for each grant scheme is stored to Azure Blob Storage in order to prevent processing grants which have already been stored.
+
+The data ingester should be ran on a timer trigger (every day), ensuring the contents of grants are up to date.
+
 ## Prerequisites
 
 - Docker
 - Docker Compose
 
 Optional:
+
 - Kubernetes
 - Helm
 
 ## Local Development
+
 Install local dependencies
 ```BASH
 npm i
