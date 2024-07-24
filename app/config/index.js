@@ -8,49 +8,48 @@ const schema = Joi.object({
   env: Joi.string(),
 
   appInsightsKey: Joi.string().optional(),
-  logLevel: Joi.string().optional(),
+  logLevel: Joi.string().default('error'),
 
   azureOpenAI: Joi.object({
-    searchUrl: Joi.string(),
-    searchApiKey: Joi.string(),
-    indexName: Joi.string(),
-    primaryKeyName: Joi.string(),
+    searchUrl: Joi.string().required(),
+    searchApiKey: Joi.string().required(),
+    summaryIndexName: Joi.string().required(),
+    indexName: Joi.string().required(),
+    primaryKeyName: Joi.string().required(),
 
-    openAiInstanceName: Joi.string(),
-    openAiKey: Joi.string(),
-    openAiModelName: Joi.string(),
-
-    summaryIndexName: Joi.string()
+    openAiInstanceName: Joi.string().required(),
+    openAiKey: Joi.string().required(),
+    openAiModelName: Joi.string().required()
   }),
 
   blobStorage: Joi.object({
-    connectionString: Joi.string(),
-    containerName: Joi.string()
+    connectionString: Joi.string().required(),
+    containerName: Joi.string().required()
   }),
 
   farmingFinder: Joi.object({
-    searchUrl: Joi.string(),
-    findFarmingUrl: Joi.string(),
-    manifestFile: Joi.string(),
-    schemeName: Joi.string()
+    searchUrl: Joi.string().required(),
+    findFarmingUrl: Joi.string().required(),
+    manifestFile: Joi.string().required(),
+    schemeName: Joi.string().required()
   }),
 
   vetVisits: Joi.object({
-    url: Joi.string(),
-    manifestFile: Joi.string(),
-    schemeName: Joi.string()
+    url: Joi.string().required(),
+    manifestFile: Joi.string().required(),
+    schemeName: Joi.string().required()
   }),
 
   woodlandCreation: Joi.object({
-    url: Joi.string(),
-    manifestFile: Joi.string(),
-    schemeName: Joi.string()
+    url: Joi.string().required(),
+    manifestFile: Joi.string().required(),
+    schemeName: Joi.string().required()
   }),
 
   woodlandOffer: Joi.object({
-    url: Joi.string(),
-    manifestFile: Joi.string(),
-    schemeName: Joi.string()
+    url: Joi.string().required(),
+    manifestFile: Joi.string().required(),
+    schemeName: Joi.string().required()
   })
 })
 

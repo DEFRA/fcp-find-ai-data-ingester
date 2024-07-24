@@ -61,7 +61,7 @@ const processGrants = async ({ grants, manifestGrants, schemeName, containerClie
           document: grant.content,
           title: grant.title,
           grantSchemeName: schemeName,
-          sourceUrl: grant.url
+          sourceUrl: sourceURL
         })
 
         for (const [index, chunk] of chunks.entries()) {
@@ -90,7 +90,7 @@ const processGrants = async ({ grants, manifestGrants, schemeName, containerClie
           document: shortSummary,
           title: grant.title,
           grantSchemeName: schemeName,
-          sourceUrl: grant.url
+          sourceUrl: sourceURL
         })
 
         const summariesKeys = []
