@@ -4,4 +4,4 @@ FROM {{adpSharedAcrName}}.azurecr.io/image/adp-aisearch-deploy:$IMAGE_TAG
 
 COPY --chmod=755 aisearch ./aisearch
 
-CMD ["-Command","run", "-aisearch"]
+CMD ["-Command","run", "aisearch", "fcp-find-ai-data-ingester"]
