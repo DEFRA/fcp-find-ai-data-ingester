@@ -1,0 +1,14 @@
+{
+  {
+    "name": "find-ai-vector-filterable-index-cache",
+    "type": "Contributer"
+  },
+  {
+    "name": "find-ai-vector-filterable-index-full",
+    "type": "Contributer"
+  },
+  {
+    "name": "find-ai-vector-filterable-index-summaries",
+    "type": "Contributer"
+  }
+}

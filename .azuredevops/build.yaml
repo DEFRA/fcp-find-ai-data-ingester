@@ -56,5 +56,7 @@ extends:
     appDeployConfig:
       filepath: "./appConfig"
       filetype: "yaml"
+      aisearch:
+        path: "./aisearch"        
       variableGroups:
         - fcp-find-ai-data-ingester-<environment>
