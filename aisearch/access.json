@@ -1,14 +1,14 @@
 {
   {
     "name": "find-ai-vector-filterable-index-cache",
-    "type": "Contributer"
+    "role": "Contributor"
   },
   {
     "name": "find-ai-vector-filterable-index-full",
-    "type": "Contributer"
+    "role": "Contributor"
   },
   {
     "name": "find-ai-vector-filterable-index-summaries",
-    "type": "Contributer"
+    "role": "Contributor"
   }
 }
