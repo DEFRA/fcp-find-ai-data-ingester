@@ -36,8 +36,7 @@ resources:
       name: DEFRA/adp-pipeline-common
       endpoint: DEFRA
       type: github
-      #ref: refs/tags/1.0.0-latest
-      ref: rv/417344-aisearch
+      ref: refs/tags/1.0.0-latest
 
 extends:
   template: /pipelines/common-app-build.yaml@DEFRA-ADPPipelineCommon
