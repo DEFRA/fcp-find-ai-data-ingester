@@ -19,7 +19,7 @@
   "contributors": [],
   "license": "OGL-UK-3.0",
   "dependencies": {
-    "@azure/search-documents": "^12.0.0",
+    "@azure/search-documents": "^12.1.0",
     "@azure/storage-blob": "^12.18.0",
     "@hapi/hapi": "21.3.2",
     "@langchain/openai": "^0.2.1",
